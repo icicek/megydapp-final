@@ -1,23 +1,6 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
 
-export default function SharePage() {
-  const router = useRouter();
-  const [queryReady, setQueryReady] = useState(false);
-
-  const { id, tokenFrom, tokenTo } = router.query;
-
-  useEffect(() => {
-    if (id && tokenFrom && tokenTo) {
-      setQueryReady(true);
-    }
-  }, [id, tokenFrom, tokenTo]);
-
-  if (!queryReady) {
-    return <p style={{ color: 'white', textAlign: 'center', marginTop: '50px' }}>Preparing...</p>;
-  }
-
+function SharePage({ id, tokenFrom, tokenTo }) {
   const imageUrl = `https://megydapp.vercel.app/api/generatecoincarnationimage?tokenFrom=${tokenFrom}&tokenTo=${tokenTo}&number=${id}`;
 
   const tweetText = `🚀 I just swapped my $${tokenFrom} for $${tokenTo}. Coincarnator #${id} reporting in.
@@ -48,3 +31,15 @@ export default function SharePage() {
     </>
   );
 }
+
+// 🔥 Kritik nokta: Dinamik parametreleri SSR'da alıyoruz
+SharePage.getInitialProps = ({ query }) => {
+  const { id, tokenFrom, tokenTo } = query;
+  return {
+    id: id || '0',
+    tokenFrom: tokenFrom || 'UNKNOWN',
+    tokenTo: tokenTo || 'MEGY',
+  };
+};
+
+export default SharePage;
