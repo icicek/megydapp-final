@@ -1,11 +1,6 @@
 import Head from 'next/head';
-import { useRouter } from 'next/router';
 
-export default function SharePage() {
-  const router = useRouter();
-  const { id, tokenFrom, tokenTo } = router.query;
-
-  // Parametreler hazır değilse boş dön
+export default function SharePage({ id, tokenFrom, tokenTo }) {
   if (!id || !tokenFrom || !tokenTo) return null;
 
   const imageUrl = `https://megydapp.vercel.app/api/generatecoincarnationimage?tokenFrom=${tokenFrom}&tokenTo=${tokenTo}&number=${id}`;
@@ -31,13 +26,22 @@ export default function SharePage() {
 
       <div style={{ textAlign: 'center', marginTop: '80px', color: 'white' }}>
         <h2>🚀 Coincarnated!</h2>
-        <img
-          src={imageUrl}
-          alt="Coincarnation Image"
-          style={{ maxWidth: '100%', marginTop: '20px' }}
-        />
+        <img src={imageUrl} alt="Coincarnation Image" style={{ maxWidth: '100%', marginTop: '20px' }} />
         <p style={{ marginTop: '30px', whiteSpace: 'pre-line' }}>{tweetText}</p>
       </div>
     </>
   );
+}
+
+export async function getServerSideProps(context) {
+  const { id } = context.params;
+  const { tokenFrom = '$DOGE', tokenTo = '$MEGY' } = context.query;
+
+  return {
+    props: {
+      id,
+      tokenFrom,
+      tokenTo,
+    },
+  };
 }
