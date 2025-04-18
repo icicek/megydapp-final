@@ -3,7 +3,7 @@ import Head from 'next/head';
 export default function SharePage({ id, tokenFrom, tokenTo }) {
   if (!id || !tokenFrom || !tokenTo) return null;
 
-  const imageUrl = `https://megydapp.vercel.app/api/generatecoincarnationimage?tokenFrom=${tokenFrom}&tokenTo=${tokenTo}&number=${id}`;
+  const imageUrl = `https://megydapp.vercel.app/generated/${id}.png`;
   const tweetText = `🚀 I just swapped my $${tokenFrom} for $${tokenTo}. Coincarnator #${id} reporting in.
 
 🌐 We're uniting deadcoins to rescue billions.
