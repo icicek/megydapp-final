@@ -11,6 +11,11 @@ export const config = {
 
 export default async function handler(req, res) {
   try {
+    const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
+    const tokenFrom = searchParams.get('tokenFrom') || '$DOGE';
+    const tokenTo = searchParams.get('tokenTo') || '$MEGY';
+    const number = searchParams.get('number') || '1';
+
     const bgPath = path.join(process.cwd(), 'public', 'coincarnated-latest.png');
     const fontPath = path.join(process.cwd(), 'public', 'OpenSans-Bold.ttf');
 
@@ -31,8 +36,14 @@ export default async function handler(req, res) {
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#00FFFF';
-    ctx.font = '40pt OpenSans';  // Daha küçük ve emojisiz
-    ctx.fillText('Hello from MEGY', width / 2, height / 2);
+
+    // 🪙 Token yazısı
+    ctx.font = '60pt OpenSans';
+    ctx.fillText(`${tokenFrom}  →  ${tokenTo}`, width / 2, height * 0.65);
+
+    // 👨‍🚀 Coincarnator numarası
+    ctx.font = '45pt OpenSans';
+    ctx.fillText(`Coincarnator #${number}`, width / 2, height * 0.72);
 
     const stream = new WritableStreamBuffer();
     await PImage.encodePNGToStream(img, stream);
@@ -40,7 +51,7 @@ export default async function handler(req, res) {
     res.setHeader('Content-Type', 'image/png');
     res.status(200).send(stream.getContents());
   } catch (error) {
-    console.error("❌ Final image render error:", error);
-    res.status(500).send("❌ Error generating image.");
+    console.error('❌ Image render error:', error);
+    res.status(500).send('❌ Error generating image.');
   }
 }
