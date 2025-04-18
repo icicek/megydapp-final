@@ -3,21 +3,18 @@ import fs from 'fs';
 import path from 'path';
 import { WritableStreamBuffer } from 'stream-buffers';
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
-
 export default async function handler(req, res) {
   try {
-    const { searchParams } = new URL(req.url, `http://${req.headers.host}`);
-    const tokenFrom = searchParams.get('tokenFrom') || '$DOGE';
-    const tokenTo = searchParams.get('tokenTo') || '$MEGY';
-    const number = searchParams.get('number') || '1';
+    const { tokenFrom = '$DOGE', tokenTo = '$MEGY', number = '1' } = req.query;
 
     const bgPath = path.join(process.cwd(), 'public', 'coincarnated-latest.png');
     const fontPath = path.join(process.cwd(), 'public', 'OpenSans-Bold.ttf');
+    const outputPath = path.join(process.cwd(), 'public', 'generated', `${number}.png`);
+
+    // Eğer görsel zaten varsa yeniden üretme
+    if (fs.existsSync(outputPath)) {
+      return res.status(200).json({ message: '✅ Image already exists.' });
+    }
 
     const bgStream = fs.createReadStream(bgPath);
     const bg = await PImage.decodePNGFromStream(bgStream);
@@ -37,21 +34,23 @@ export default async function handler(req, res) {
     ctx.textAlign = 'center';
     ctx.fillStyle = '#00FFFF';
 
-    // 🪙 Token yazısı
     ctx.font = '60pt OpenSans';
     ctx.fillText(`${tokenFrom}   →     ${tokenTo}`, width / 2, height * 0.42);
 
-    // 👨‍🚀 Coincarnator numarası
     ctx.font = '45pt OpenSans';
     ctx.fillText(`Coincarnator #${number}`, width / 2, height * 0.49);
 
+    // PNG çıktısını buffer olarak al
     const stream = new WritableStreamBuffer();
     await PImage.encodePNGToStream(img, stream);
 
-    res.setHeader('Content-Type', 'image/png');
-    res.status(200).send(stream.getContents());
-  } catch (error) {
-    console.error('❌ Image render error:', error);
-    res.status(500).send('❌ Error generating image.');
+    // Kaydet: public/generated/777.png
+    fs.mkdirSync(path.dirname(outputPath), { recursive: true });
+    fs.writeFileSync(outputPath, stream.getContents());
+
+    return res.status(200).json({ message: '✅ Image generated successfully.', path: `/generated/${number}.png` });
+  } catch (err) {
+    console.error('❌ Error:', err);
+    return res.status(500).json({ message: '❌ Failed to generate image.' });
   }
 }
