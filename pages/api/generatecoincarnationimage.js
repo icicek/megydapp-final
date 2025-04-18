@@ -39,11 +39,11 @@ export default async function handler(req, res) {
 
     // 🪙 Token yazısı
     ctx.font = '60pt OpenSans';
-    ctx.fillText(`${tokenFrom}   →    ${tokenTo}`, width / 2, height * 0.43);
+    ctx.fillText(`${tokenFrom}   →     ${tokenTo}`, width / 2, height * 0.42);
 
     // 👨‍🚀 Coincarnator numarası
     ctx.font = '45pt OpenSans';
-    ctx.fillText(`Coincarnator #${number}`, width / 2, height * 0.50);
+    ctx.fillText(`Coincarnator #${number}`, width / 2, height * 0.49);
 
     const stream = new WritableStreamBuffer();
     await PImage.encodePNGToStream(img, stream);
