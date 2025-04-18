@@ -31,8 +31,8 @@ export default async function handler(req, res) {
 
     ctx.textAlign = 'center';
     ctx.fillStyle = '#00FFFF';
-    ctx.font = '40pt OpenSans'; // küçük boyut deniyoruz
-    ctx.fillText('🧪 Hello from Coincarnation', width / 2, height / 2);
+    ctx.font = '40pt OpenSans';  // Daha küçük ve emojisiz
+    ctx.fillText('Hello from MEGY', width / 2, height / 2);
 
     const stream = new WritableStreamBuffer();
     await PImage.encodePNGToStream(img, stream);
