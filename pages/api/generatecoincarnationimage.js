@@ -9,21 +9,16 @@ export const config = {
 };
 
 export default async function handler(req, res) {
-  const bgPath = path.join(process.cwd(), 'public', 'coincarnated-latest.png');
-
-  if (!fs.existsSync(bgPath)) {
-    res.status(404).send("Background image not found");
-    return;
-  }
-
   try {
-    const bgStream = fs.createReadStream(bgPath);
-    const image = await PImage.decodePNGFromStream(bgStream);
+    const fontPath = path.join(process.cwd(), 'public', 'OpenSans-Bold.ttf');
+
+    const font = PImage.registerFont(fontPath, 'OpenSans');
+    await font.load();
 
     res.setHeader('Content-Type', 'text/plain');
-    res.status(200).send(`✅ PNG decoded. Size: ${image.width} x ${image.height}`);
+    res.status(200).send("✅ Font loaded successfully.");
   } catch (error) {
-    console.error("❌ Error decoding PNG:", error);
-    res.status(500).send("❌ Error decoding PNG.");
+    console.error("❌ Font load failed:", error);
+    res.status(500).send("❌ Font load failed.");
   }
 }
