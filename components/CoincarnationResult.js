@@ -15,7 +15,7 @@ export default function CoincarnationResult({ tokenFrom, number, imageUrl }) {
 
   return (
     <div className="text-center mt-10">
-      {/* 🎉 Tebrik Mesajı */}
+      {/* 🎉 Tebrik */}
       <h2 className="text-2xl font-bold text-green-400 mb-4">
         🎉 Congrats! You’ve Coincarnated ${tokenFrom} → $MEGY
       </h2>
@@ -27,12 +27,12 @@ export default function CoincarnationResult({ tokenFrom, number, imageUrl }) {
         className="mx-auto rounded-xl shadow-xl w-[600px]"
       />
 
-      {/* 📣 Paylaşım Metni */}
+      {/* 📝 Metin */}
       <p className="text-lg font-medium text-white mt-6 whitespace-pre-line">
         {shareText}
       </p>
 
-      {/* 🐦 Paylaşım Butonu */}
+      {/* 🐦 Twitter paylaşım */}
       <a
         href={twitterShareUrl}
         target="_blank"
