@@ -1,6 +1,8 @@
 'use client';
+
 import { useEffect, useState } from 'react';
 import CountUp from 'react-countup';
+import CoincarneForm from '../components/CoincarneForm'; // 🆕 Yeni import
 
 export default function Home() {
   const [stats, setStats] = useState({
@@ -83,6 +85,11 @@ export default function Home() {
           💸 $<CountUp key={stats.totalUsdValue} end={stats.totalUsdValue} duration={1.5} decimals={2} />
           {' '}worth of deadcoins revived.
         </p>
+      </div>
+
+      {/* 🆕 Buraya CoincarneForm ekledik */}
+      <div className="mt-10 w-full max-w-2xl">
+        <CoincarneForm />
       </div>
 
       {stats.latest && (
