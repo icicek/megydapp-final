@@ -1,0 +1,20 @@
+[
+  {
+    "ticker": "$MOON",
+    "mint": "0x1234567890abcdef",
+    "chain": "bsc",
+    "addedAt": "2025-04-03T15:00:00Z"
+  },
+  {
+    "ticker": "$ZOON",
+    "mint": "0x1234567890abcdez",
+    "chain": "Ethereum",
+    "addedAt": "2025-04-02T10:00:00Z"
+  },
+  {
+    "ticker": "$BOON",
+    "mint": "0x1234567890abcdeb",
+    "chain": "Polygon",
+    "addedAt": "2025-04-26T13:15:00Z"
+  }
+]

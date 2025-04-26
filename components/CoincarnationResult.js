@@ -1,46 +1,56 @@
+// ✅ File: components/CoincarnationResult.js
 'use client';
 
 import React from 'react';
 
 export default function CoincarnationResult({ tokenFrom, number, imageUrl }) {
-  const shareText = `🚀 I just swapped my $${tokenFrom} for $MEGY. Coincarnator #${number} reporting in.
+  const tweetText = `🚀 I just swapped my $${tokenFrom} for $MEGY. Coincarnator #${number} reporting in.\n\n🌐 We're uniting deadcoins to rescue billions.\n\n🔗 Join us 👉 coincarnation.com`;
 
-🌐 We're uniting deadcoins to rescue billions.
-
-🔗 Join us 👉 coincarnation.com
-
-#Coincarnation`;
-
-  const twitterShareUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}`;
+  const tweetLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
 
   return (
-    <div className="text-center mt-10">
-      {/* 🎉 Tebrik */}
-      <h2 className="text-2xl font-bold text-green-400 mb-4">
-        🎉 Congrats! You’ve Coincarnated ${tokenFrom} → $MEGY
-      </h2>
-
-      {/* 🚀 Görsel */}
+    <div style={{ textAlign: 'center', padding: '40px', backgroundColor: 'black', color: 'white' }}>
+      <h2>🚀 Coincarnated!</h2>
       <img
         src={imageUrl}
-        alt="Coincarnated"
-        className="mx-auto rounded-xl shadow-xl w-[600px]"
+        alt="Coincarnation Image"
+        style={{ maxWidth: '100%', marginTop: '20px', borderRadius: '8px' }}
       />
+      <p style={{ marginTop: '30px', whiteSpace: 'pre-line' }}>{tweetText}</p>
 
-      {/* 📝 Metin */}
-      <p className="text-lg font-medium text-white mt-6 whitespace-pre-line">
-        {shareText}
-      </p>
+      <div style={{ marginTop: '40px' }}>
+        <a
+          href={imageUrl}
+          download={`coincarnation-${number}.png`}
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#00FFFF',
+            color: 'black',
+            fontWeight: 'bold',
+            borderRadius: '6px',
+            textDecoration: 'none',
+            marginRight: '20px'
+          }}
+        >
+          ⬇️ Download Image
+        </a>
 
-      {/* 🐦 Twitter paylaşım */}
-      <a
-        href={twitterShareUrl}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-block mt-6 px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
-      >
-        Share on Twitter 🚀
-      </a>
+        <a
+          href={tweetLink}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            padding: '12px 24px',
+            backgroundColor: '#1DA1F2',
+            color: 'white',
+            fontWeight: 'bold',
+            borderRadius: '6px',
+            textDecoration: 'none'
+          }}
+        >
+          🐦 Share Tweet (add image manually)
+        </a>
+      </div>
     </div>
   );
 }

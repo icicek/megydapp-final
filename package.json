@@ -9,11 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@supabase/supabase-js": "^2.49.4",
     "next": "15.3.0",
+    "node-fetch": "^3.3.2",
     "pureimage": "^0.4.18",
     "react": "^19.0.0",
+    "react-countup": "^6.5.3",
     "react-dom": "^19.0.0",
-    "stream-buffers": "^3.0.3"
+    "stream-buffers": "^3.0.3",
+    "uploadthing": "^7.6.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
