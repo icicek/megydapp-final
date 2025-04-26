@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useEffect, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { Connection } from "@solana/web3.js";
@@ -6,7 +8,7 @@ import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 const connection = new Connection("https://api.mainnet-beta.solana.com");
 const TOKEN_LIST_URL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
 
-const CoincarneForm = () => {
+export default function CoincarneForm() {
   const { publicKey, connected } = useWallet();
   const [walletAddress, setWalletAddress] = useState(null);
   const [tokens, setTokens] = useState([]);
@@ -75,7 +77,7 @@ const CoincarneForm = () => {
 
   const fetchGlobalStats = async () => {
     try {
-      const res = await fetch("http://localhost:3001/api/coincarne/stats");
+      const res = await fetch("/api/coincarnation/stats");
       const data = await res.json();
       if (res.ok) {
         setGlobalStats(data);
@@ -92,7 +94,7 @@ const CoincarneForm = () => {
 
   const handleCoincarne = async (mint, amount) => {
     try {
-      const response = await fetch("http://localhost:3001/api/coincarne", {
+      const response = await fetch("/api/coincarnation/transfer", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -197,6 +199,4 @@ const CoincarneForm = () => {
       )}
     </div>
   );
-};
-
-export default CoincarneForm;
+}
