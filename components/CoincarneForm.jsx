@@ -140,6 +140,7 @@ export default function CoincarneForm() {
             padding: "15px",
             marginBottom: "20px",
             backgroundColor: "#f9f9f9",
+            color: "#000", // 🆕
           }}
         >
           <h3>🌐 Global Coincarne Stats</h3>

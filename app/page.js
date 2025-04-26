@@ -103,10 +103,7 @@ export default function Home() {
           ⏳ {timeLeft.days} days {timeLeft.hours}:{timeLeft.minutes?.toString().padStart(2, '0')}:{timeLeft.seconds?.toString().padStart(2, '0')} remaining...
         </div>
       )}
-
-      <p className="mt-8 text-sm">
-        Try a test link 👉 <a href="/share/777" className="text-cyan-400 underline">/share/777</a>
-      </p>
+      
     </div>
   );
 }
