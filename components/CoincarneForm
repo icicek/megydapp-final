@@ -200,9 +200,3 @@ const CoincarneForm = () => {
 };
 
 export default CoincarneForm;
-return (
-  <div>
-    <CoincarneForm />
-    <ClaimPanel /> {/* 👈 Bu JSX satırı */}
-  </div>
-);
