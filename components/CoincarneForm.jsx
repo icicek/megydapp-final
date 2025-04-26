@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"; // 🆕 Cüzdan butonu import
 import { Connection } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
@@ -126,6 +127,11 @@ export default function CoincarneForm() {
 
   return (
     <div style={{ padding: "20px" }}>
+      {/* 🆕 Wallet Bağlama Butonu */}
+      <div style={{ marginBottom: "20px" }}>
+        <WalletMultiButton />
+      </div>
+
       {globalStats && (
         <div
           style={{
