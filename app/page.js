@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import CountUp from 'react-countup';
-import CoincarneForm from '../components/CoincarneForm'; // 🆕 Yeni import
+import CoincarneForm from '../components/CoincarneForm.js'; // 🆕 Yeni import
 
 export default function Home() {
   const [stats, setStats] = useState({
