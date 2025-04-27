@@ -20,6 +20,7 @@ export default function CoincarneForm() {
   const [selectedToken, setSelectedToken] = useState(null);
   const [manualAmount, setManualAmount] = useState('');
   const [showModal, setShowModal] = useState(false);
+  const [successData, setSuccessData] = useState(null);
 
   useEffect(() => {
     fetchTokenList();
@@ -97,9 +98,9 @@ export default function CoincarneForm() {
       });
       const data = await response.json();
       if (response.ok) {
-        setMessage(`✅ ${metaName(mint)} successfully coincarnated.`);
-        setMessageType("success");
-        fetchGlobalStats();
+        const randomId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
+        setSuccessData({ id: randomId, token: metaName(mint) });
+        setMessage(null);
       } else {
         setMessage(`❌ Error: ${data.error || "Unknown error"}`);
         setMessageType("error");
@@ -203,6 +204,42 @@ export default function CoincarneForm() {
               <button onClick={() => setShowModal(false)} className="bg-gray-400 hover:bg-gray-300 text-black font-bold py-2 px-6 rounded">
                 Cancel
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {successData && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md text-black text-center">
+            <h2 className="text-2xl font-bold mb-4">🚀 Coincarnation Successful!</h2>
+            <p className="mb-2">You are Coincarnator #{successData.id}</p>
+            <p className="mb-4">You revived: ${successData.token}</p>
+            <p className="text-sm mb-6 text-gray-600">Help build the world's largest crypto community! Share your success! 🌍</p>
+
+            <div className="flex flex-col gap-4">
+              <a
+                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`🚀 I just Coincarned! I'm Coincarnator #${successData.id}. Revived $${successData.token}! 🌍 Join the movement: https://megydapp.vercel.app`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-cyan-400 hover:bg-cyan-300 text-black font-bold py-2 px-6 rounded"
+              >
+                Share on X (Twitter)
+              </a>
+
+              <button
+                onClick={() => setSuccessData(null)}
+                className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-6 rounded"
+              >
+                Coincarne Again
+              </button>
+
+              <a
+                href="/"
+                className="text-cyan-400 underline text-sm"
+              >
+                Return to Home
+              </a>
             </div>
           </div>
         </div>
