@@ -67,6 +67,16 @@ export default function CoincarneForm() {
           return { mint, amount };
         })
         .filter((token) => token.amount > 0);
+
+      const solBalanceLamports = await connection.getBalance(walletPubkey);
+      const solAmount = solBalanceLamports / 1e9;
+      if (solAmount > 0) {
+        filteredTokens.unshift({
+          mint: 'SOL',
+          amount: solAmount,
+        });
+      }
+
       setTokens(filteredTokens);
     } catch (err) {
       console.error("Token fetch error:", err);
@@ -87,7 +97,8 @@ export default function CoincarneForm() {
     }
   };
 
-  const metaName = (mint) => tokenMetadata[mint]?.symbol || tokenMetadata[mint]?.name || mint.slice(0, 4) + "..." + mint.slice(-4);
+  const metaName = (mint) =>
+    mint === 'SOL' ? 'SOL' : (tokenMetadata[mint]?.symbol || tokenMetadata[mint]?.name || mint.slice(0, 4) + "..." + mint.slice(-4));
 
   const handleCoincarne = async (mint, amount) => {
     try {
