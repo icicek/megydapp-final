@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { WalletMultiButton } from "@solana/wallet-adapter-react-ui"; // 🆕 Cüzdan butonu import
+import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Connection } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
@@ -17,6 +17,9 @@ export default function CoincarneForm() {
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState("success");
   const [globalStats, setGlobalStats] = useState(null);
+  const [selectedToken, setSelectedToken] = useState(null);
+  const [manualAmount, setManualAmount] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     fetchTokenList();
@@ -38,7 +41,6 @@ export default function CoincarneForm() {
     try {
       const res = await fetch(TOKEN_LIST_URL);
       const data = await res.json();
-
       const metadataMap = {};
       data.tokens.forEach((token) => {
         metadataMap[token.address] = {
@@ -47,7 +49,6 @@ export default function CoincarneForm() {
           logoURI: token.logoURI,
         };
       });
-
       setTokenMetadata(metadataMap);
     } catch (err) {
       console.error("Token metadata fetch error:", err);
@@ -56,11 +57,7 @@ export default function CoincarneForm() {
 
   const fetchTokens = async (walletPubkey) => {
     try {
-      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(
-        walletPubkey,
-        { programId: TOKEN_PROGRAM_ID }
-      );
-
+      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(walletPubkey, { programId: TOKEN_PROGRAM_ID });
       const filteredTokens = tokenAccounts.value
         .map((account) => {
           const info = account.account.data.parsed.info;
@@ -69,7 +66,6 @@ export default function CoincarneForm() {
           return { mint, amount };
         })
         .filter((token) => token.amount > 0);
-
       setTokens(filteredTokens);
     } catch (err) {
       console.error("Token fetch error:", err);
@@ -90,29 +86,20 @@ export default function CoincarneForm() {
     }
   };
 
-  const metaName = (mint) =>
-    tokenMetadata[mint]?.symbol || tokenMetadata[mint]?.name || mint.slice(0, 4) + "..." + mint.slice(-4);
+  const metaName = (mint) => tokenMetadata[mint]?.symbol || tokenMetadata[mint]?.name || mint.slice(0, 4) + "..." + mint.slice(-4);
 
   const handleCoincarne = async (mint, amount) => {
     try {
       const response = await fetch("/api/coincarnation/transfer", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          wallet: walletAddress,
-          mint,
-          amount,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ wallet: walletAddress, mint, amount }),
       });
-
       const data = await response.json();
-
       if (response.ok) {
-        setMessage(`✅ ${metaName(mint)} successfully Coincarned.`);
+        setMessage(`✅ ${metaName(mint)} successfully coincarnated.`);
         setMessageType("success");
-        fetchGlobalStats(); // update global stats after new Coincarne
+        fetchGlobalStats();
       } else {
         setMessage(`❌ Error: ${data.error || "Unknown error"}`);
         setMessageType("error");
@@ -121,28 +108,32 @@ export default function CoincarneForm() {
       setMessage(`⚠️ Network error: ${error.message}`);
       setMessageType("error");
     }
-
     setTimeout(() => setMessage(null), 4000);
+  };
+
+  const openModal = (token) => {
+    setSelectedToken(token);
+    setManualAmount('');
+    setShowModal(true);
+  };
+
+  const confirmCoincarne = async () => {
+    if (!manualAmount || isNaN(manualAmount) || manualAmount <= 0) {
+      alert('Please enter a valid amount.');
+      return;
+    }
+    setShowModal(false);
+    await handleCoincarne(selectedToken.mint, manualAmount);
   };
 
   return (
     <div style={{ padding: "20px" }}>
-      {/* 🆕 Wallet Bağlama Butonu */}
       <div style={{ marginBottom: "20px" }}>
         <WalletMultiButton />
       </div>
 
       {globalStats && (
-        <div
-          style={{
-            border: "1px solid #ddd",
-            borderRadius: "8px",
-            padding: "15px",
-            marginBottom: "20px",
-            backgroundColor: "#f9f9f9",
-            color: "#000", // 🆕
-          }}
-        >
+        <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "15px", marginBottom: "20px", backgroundColor: "#f9f9f9", color: "#000" }}>
           <h3>🌐 Global Coincarne Stats</h3>
           <p>💰 <strong>Total Coincarne USD:</strong> ${globalStats.totalUSD}</p>
           <p>👥 <strong>Unique Wallets:</strong> {globalStats.totalWallets}</p>
@@ -152,21 +143,13 @@ export default function CoincarneForm() {
       )}
 
       {message && (
-        <div
-          style={{
-            backgroundColor: messageType === "success" ? "#d4edda" : "#f8d7da",
-            color: messageType === "success" ? "#155724" : "#721c24",
-            padding: "10px",
-            marginBottom: "15px",
-            borderRadius: "5px",
-          }}
-        >
+        <div style={{ backgroundColor: messageType === "success" ? "#d4edda" : "#f8d7da", color: messageType === "success" ? "#155724" : "#721c24", padding: "10px", marginBottom: "15px", borderRadius: "5px" }}>
           {message}
         </div>
       )}
 
       <h2>Coincarne Panel</h2>
-      <p>Select tokens from your wallet and Coincarne them into $MEGY.</p>
+      <p>Select tokens from your wallet and coincarnate them into $MEGY.</p>
 
       {walletAddress ? (
         <p><strong>Connected Wallet:</strong> {walletAddress}</p>
@@ -182,20 +165,13 @@ export default function CoincarneForm() {
             return (
               <li key={i} style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
                 {meta.logoURI && (
-                  <img
-                    src={meta.logoURI}
-                    alt={meta.symbol}
-                    width="24"
-                    height="24"
-                    style={{ marginRight: "10px", borderRadius: "50%" }}
-                  />
+                  <img src={meta.logoURI} alt={meta.symbol} width="24" height="24" style={{ marginRight: "10px", borderRadius: "50%" }} />
                 )}
                 <div style={{ flex: 1 }}>
-                  <strong>{meta.symbol || "Unknown Token"}</strong>
-                  {" "}({meta.name || token.mint}) — {token.amount}
+                  <strong>{meta.symbol || "Unknown Token"}</strong> ({meta.name || token.mint}) — {token.amount}
                 </div>
-                <button onClick={() => handleCoincarne(token.mint, token.amount)}>
-                  Coincarne Et
+                <button onClick={() => openModal(token)}>
+                  Coincarnate
                 </button>
               </li>
             );
@@ -203,6 +179,33 @@ export default function CoincarneForm() {
         </ul>
       ) : (
         <p>No tokens found or wallet not connected.</p>
+      )}
+
+      {showModal && selectedToken && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-full max-w-md text-black">
+            <h2 className="text-2xl font-bold mb-4">Coincarnate {metaName(selectedToken.mint)}</h2>
+            <p className="mb-4">Balance: {selectedToken.amount}</p>
+
+            <div className="flex gap-2 mb-4">
+              <button onClick={() => setManualAmount((selectedToken.amount * 0.25).toFixed(2))}>25%</button>
+              <button onClick={() => setManualAmount((selectedToken.amount * 0.5).toFixed(2))}>50%</button>
+              <button onClick={() => setManualAmount((selectedToken.amount * 0.75).toFixed(2))}>75%</button>
+              <button onClick={() => setManualAmount(selectedToken.amount)}>Max</button>
+            </div>
+
+            <input type="number" min="0" step="any" value={manualAmount} onChange={(e) => setManualAmount(e.target.value)} placeholder="Enter amount to coincarnate" className="w-full p-2 border rounded mb-4" />
+
+            <div className="flex gap-4">
+              <button onClick={() => confirmCoincarne()} className="bg-cyan-400 hover:bg-cyan-300 text-black font-bold py-2 px-6 rounded">
+                Coincarnate Now 🚀
+              </button>
+              <button onClick={() => setShowModal(false)} className="bg-gray-400 hover:bg-gray-300 text-black font-bold py-2 px-6 rounded">
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
