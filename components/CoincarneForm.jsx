@@ -6,7 +6,6 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Connection, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
-const connection = new Connection("https://dry-sly-shard.solana-mainnet.quiknode.pro/2caf002b99622573ca73298eca87f13eb8ebda6c/");
 const TOKEN_LIST_URL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
 
 export default function CoincarneForm() {
