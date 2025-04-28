@@ -50,6 +50,12 @@ export default function CoincarneForm() {
           logoURI: token.logoURI,
         };
       });
+      // SOL'u elle ekliyoruz
+      metadataMap['SOL'] = {
+        symbol: 'SOL',
+        name: 'Solana',
+        logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png',
+      };
       setTokenMetadata(metadataMap);
     } catch (err) {
       console.error("Token metadata fetch error:", err);
@@ -177,10 +183,10 @@ export default function CoincarneForm() {
             return (
               <li key={i} style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
                 {meta.logoURI && (
-                  <img src={meta.logoURI} alt={meta.symbol} width="24" height="24" style={{ marginRight: "10px", borderRadius: "50%" }} />
+                  <img src={meta.logoURI} alt={meta.symbol || "Token"} width="24" height="24" style={{ marginRight: "10px", borderRadius: "50%" }} />
                 )}
                 <div style={{ flex: 1 }}>
-                  <strong>{meta.symbol || "Unknown Token"}</strong> ({meta.name || token.mint}) — {token.amount}
+                  <strong>{meta.symbol || token.mint}</strong> ({meta.name || token.mint}) — {token.amount}
                 </div>
                 <button onClick={() => openModal(token)}>
                   Coincarnate
