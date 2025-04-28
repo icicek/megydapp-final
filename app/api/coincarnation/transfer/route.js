@@ -1,5 +1,13 @@
 import { promises as fs } from 'fs';
 import path from 'path';
+import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
+import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+
+// QuickNode bağlantın
+const connection = new Connection("https://dry-sly-shard.solana-mainnet.quiknode.pro/2caf002b99622...");
+
+// Coincarnation hedef cüzdanın
+const COINCARNATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd";
 
 async function checkRedAndBlackLists(tokenMint, tokenChain, userTimestampISO) {
   const redlistPath = path.join(process.cwd(), 'data', 'redlist_tokens.json');
@@ -80,6 +88,44 @@ export async function POST(req) {
       }, { status: 200 });
     }
 
+    // === 🔥 Blockchain Üzerinde Transfer İşlemi Başlıyor ===
+
+    const senderPubkey = new PublicKey(wallet_address);
+    const receiverPubkey = new PublicKey(COINCARNATION_WALLET);
+
+    const transaction = new Transaction();
+
+    if (mint === "SOL") {
+      // SOL gönderimi
+      transaction.add(
+        SystemProgram.transfer({
+          fromPubkey: senderPubkey,
+          toPubkey: receiverPubkey,
+          lamports: Math.floor(amount * 1e9),
+        })
+      );
+    } else {
+      // SPL Token gönderimi
+      const mintPubkey = new PublicKey(mint);
+
+      const senderTokenAccount = await getAssociatedTokenAddress(mintPubkey, senderPubkey);
+      const receiverTokenAccount = await getAssociatedTokenAddress(mintPubkey, receiverPubkey);
+
+      transaction.add(
+        createTransferInstruction(
+          senderTokenAccount,
+          receiverTokenAccount,
+          senderPubkey,
+          Math.floor(amount * (10 ** 6)) // 6 decimal standard assumed for SPL
+        )
+      );
+    }
+
+    // Burada frontend cüzdanında onaylama adımı olacak.
+    // Şu an backend sadece transaction hazırlıyor.
+
+    // === 🔥 Katılımcı Kayıt İşlemi ===
+
     existing.push({
       id: existing.length + 1,
       wallet_address,
@@ -87,12 +133,13 @@ export async function POST(req) {
       mint,
       amount,
       chain,
-      timestamp
+      timestamp,
+      status: 'completed'
     });
 
     await fs.writeFile(participantsPath, JSON.stringify(existing, null, 2), 'utf-8');
 
-    return Response.json({ message: '✅ Coincarnation complete.' });
+    return Response.json({ message: '✅ Coincarnation transaction prepared successfully.', transaction: transaction.serialize({ requireAllSignatures: false }).toString('base64') });
 
   } catch (err) {
     console.error('[Server Error]', err);

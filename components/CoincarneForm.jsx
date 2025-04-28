@@ -1,16 +1,17 @@
 'use client';
 
 import React, { useEffect, useState } from "react";
-import { useWallet } from "@solana/wallet-adapter-react";
+import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
-import { Connection } from "@solana/web3.js";
+import { Connection, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 const connection = new Connection("https://dry-sly-shard.solana-mainnet.quiknode.pro/2caf002b99622573ca73298eca87f13eb8ebda6c/");
 const TOKEN_LIST_URL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
 
 export default function CoincarneForm() {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, sendTransaction } = useWallet();
+  const { connection } = useConnection();
   const [walletAddress, setWalletAddress] = useState(null);
   const [tokens, setTokens] = useState([]);
   const [tokenMetadata, setTokenMetadata] = useState({});
@@ -50,7 +51,6 @@ export default function CoincarneForm() {
           logoURI: token.logoURI,
         };
       });
-      // SOL'u elle ekliyoruz
       metadataMap['SOL'] = {
         symbol: 'SOL',
         name: 'Solana',
@@ -111,21 +111,40 @@ export default function CoincarneForm() {
       const response = await fetch("/api/coincarnation/transfer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ wallet: walletAddress, mint, amount }),
+        body: JSON.stringify({
+          wallet_address: walletAddress,
+          token_from: metaName(mint),
+          mint,
+          amount,
+          chain: "solana",
+        }),
       });
+
       const data = await response.json();
+
       if (response.ok) {
-        const randomId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
-        setSuccessData({ id: randomId, token: metaName(mint) });
-        setMessage(null);
+        if (data.transaction) {
+          const transaction = Transaction.from(Buffer.from(data.transaction, "base64"));
+          const signature = await sendTransaction(transaction, connection);
+          console.log("Transaction Signature:", signature);
+
+          const randomId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
+          setSuccessData({ id: randomId, token: metaName(mint) });
+          setMessage(null);
+        } else {
+          setMessage(`✅ Coincarnation successful without blockchain transfer.`);
+          setMessageType("success");
+        }
       } else {
         setMessage(`❌ Error: ${data.error || "Unknown error"}`);
         setMessageType("error");
       }
     } catch (error) {
+      console.error(error);
       setMessage(`⚠️ Network error: ${error.message}`);
       setMessageType("error");
     }
+
     setTimeout(() => setMessage(null), 4000);
   };
 
