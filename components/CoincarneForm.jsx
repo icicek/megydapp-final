@@ -6,6 +6,9 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Connection, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
+// ✅ QuickNode bağlantısı
+const rpcConnection = new Connection("https://dry-sly-shard.solana-mainnet.quiknode.pro/2caf002b99622573ca73298eca87f13eb8ebda6c/");
+
 const TOKEN_LIST_URL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
 
 export default function CoincarneForm() {
@@ -63,7 +66,7 @@ export default function CoincarneForm() {
 
   const fetchTokens = async (walletPubkey) => {
     try {
-      const tokenAccounts = await connection.getParsedTokenAccountsByOwner(walletPubkey, { programId: TOKEN_PROGRAM_ID });
+      const tokenAccounts = await rpcConnection.getParsedTokenAccountsByOwner(walletPubkey, { programId: TOKEN_PROGRAM_ID });
       const filteredTokens = tokenAccounts.value
         .map((account) => {
           const info = account.account.data.parsed.info;
@@ -73,7 +76,7 @@ export default function CoincarneForm() {
         })
         .filter((token) => token.amount > 0);
 
-      const solBalanceLamports = await connection.getBalance(walletPubkey);
+      const solBalanceLamports = await rpcConnection.getBalance(walletPubkey);
       const solAmount = solBalanceLamports / 1e9;
       if (solAmount > 0) {
         filteredTokens.unshift({
