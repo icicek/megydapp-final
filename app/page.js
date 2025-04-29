@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import CountUp from 'react-countup';
-import CoincarneForm from '../components/CoincarneForm'; // 🆕 Yeni import
+import CoincarneForm from '../components/CoincarneForm';
 
 export default function Home() {
   const [stats, setStats] = useState({
@@ -16,7 +16,32 @@ export default function Home() {
   const [timeLeft, setTimeLeft] = useState({});
   const [hasCoincarneDone, setHasCoincarneDone] = useState(false);
 
-  // End date config dosyasından alınır
+  // ✅ 1. Coincarne işlemi yapılmış mı kontrol et (localStorage)
+  useEffect(() => {
+    const done = localStorage.getItem('coincarneDone');
+    if (done === 'true') {
+      setHasCoincarneDone(true);
+    }
+  }, []);
+
+  // ✅ 2. Katılımcı verilerini çek
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch('/api/coincarnation/stats');
+        const data = await res.json();
+        setStats(data);
+      } catch (err) {
+        console.error('Stats fetch failed', err);
+      }
+    };
+
+    fetchStats();
+    const interval = setInterval(fetchStats, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // ✅ 3. Coincarnation kapanış tarihi (geri sayım)
   useEffect(() => {
     const fetchEndDate = async () => {
       try {
@@ -30,31 +55,7 @@ export default function Home() {
     fetchEndDate();
   }, []);
 
-  // Katılımcı verileri otomatik çekilir
-  useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await fetch('/api/coincarnation/stats');
-        const data = await res.json();
-        setStats(data);
-      } catch (err) {
-        console.error('Stats fetch failed', err);
-      }
-    };
-
-  useEffect(() => {
-    const done = localStorage.getItem('coincarneDone');
-    if (done === 'true') {
-      setHasCoincarneDone(true);
-    }
-  }, []);    
-
-    fetchStats();
-    const interval = setInterval(fetchStats, 30000); // 30 saniyede bir yenile
-    return () => clearInterval(interval);
-  }, []);
-
-  // Geri sayım
+  // ✅ 4. Geri sayımı güncelle
   useEffect(() => {
     if (!endDate) return;
 
@@ -96,33 +97,35 @@ export default function Home() {
         </p>
       </div>
 
-      {/* 🆕 Buraya CoincarneForm ekledik */}
+      {/* ✅ Coincarne Formu */}
       <div className="mt-10 w-full max-w-2xl">
         <CoincarneForm />
       </div>
 
-     {hasCoincarneDone && (
-      <div className="mt-8 flex justify-center">
-        <Link href="/claim">
-          <button className="px-6 py-3 bg-green-500 hover:bg-green-600 text-black text-lg font-bold rounded-xl transition-all duration-300">
-            🎯 Go to Profile
-          </button>
-        </Link>
-      </div>
-     )} 
+      {/* ✅ Sadece işlem yapan kullanıcıya gösterilen buton */}
+      {hasCoincarneDone && (
+        <div className="mt-8 flex justify-center">
+          <Link href="/claim">
+            <button className="px-6 py-3 bg-green-500 hover:bg-green-600 text-black text-lg font-bold rounded-xl transition-all duration-300">
+              🎯 Go to Profile
+            </button>
+          </Link>
+        </div>
+      )}
 
+      {/* ✅ Son Katılımcı */}
       {stats.latest && (
         <div className="mt-6 text-sm text-gray-300">
           🧑‍🚀 Latest: <span className="font-mono">{stats.latest.wallet}</span> revived <span className="font-bold">{stats.latest.token}</span>
         </div>
       )}
 
+      {/* ✅ Geri sayım */}
       {!timeLeft.expired && endDate && (
         <div className="mt-4 text-sm text-yellow-400">
           ⏳ {timeLeft.days} days {timeLeft.hours}:{timeLeft.minutes?.toString().padStart(2, '0')}:{timeLeft.seconds?.toString().padStart(2, '0')} remaining...
         </div>
       )}
-      
     </div>
   );
 }
