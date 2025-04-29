@@ -14,7 +14,7 @@ import {
 } from '@solana/spl-token';
 
 // 🔗 QuickNode bağlantısı
-const connection = new Connection("https://dry-sly-shard.solana-mainnet.quiknode.pro/2caf002b99622...");
+const connection = new Connection("https://patient-dry-tab.solana-mainnet.quiknode.pro/28eced89e0df71d2d6ed0e0f8d7026e53ed9dd53/");
 
 // 🎯 Coincarnation hedef cüzdan
 const COINCARNATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd";
