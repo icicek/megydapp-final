@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import CountUp from 'react-countup';
 import CoincarneForm from '../components/CoincarneForm'; // 🆕 Yeni import
@@ -13,6 +14,7 @@ export default function Home() {
 
   const [endDate, setEndDate] = useState(null);
   const [timeLeft, setTimeLeft] = useState({});
+  const [hasCoincarneDone, setHasCoincarneDone] = useState(false);
 
   // End date config dosyasından alınır
   useEffect(() => {
@@ -39,6 +41,13 @@ export default function Home() {
         console.error('Stats fetch failed', err);
       }
     };
+
+  useEffect(() => {
+    const done = localStorage.getItem('coincarneDone');
+    if (done === 'true') {
+      setHasCoincarneDone(true);
+    }
+  }, []);    
 
     fetchStats();
     const interval = setInterval(fetchStats, 30000); // 30 saniyede bir yenile
@@ -91,6 +100,16 @@ export default function Home() {
       <div className="mt-10 w-full max-w-2xl">
         <CoincarneForm />
       </div>
+
+     {hasCoincarneDone && (
+      <div className="mt-8 flex justify-center">
+        <Link href="/claim">
+          <button className="px-6 py-3 bg-green-500 hover:bg-green-600 text-black text-lg font-bold rounded-xl transition-all duration-300">
+            🎯 Go to Profile
+          </button>
+        </Link>
+      </div>
+     )} 
 
       {stats.latest && (
         <div className="mt-6 text-sm text-gray-300">
