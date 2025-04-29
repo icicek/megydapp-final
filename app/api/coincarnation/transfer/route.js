@@ -97,6 +97,9 @@ export async function POST(req) {
     const receiverPubkey = new PublicKey(COINCARNATION_WALLET);
     const transaction = new Transaction();
 
+    transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
+    transaction.feePayer = senderPubkey;
+
     if (mint === "SOL") {
       // 💸 SOL gönderimi
       transaction.add(
