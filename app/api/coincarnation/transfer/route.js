@@ -64,7 +64,6 @@ export async function POST(req) {
     const { wallet_address, token_from, mint, amount, chain } = body;
     const timestamp = new Date().toISOString();
 
-    // 🔍 Blacklist / Redlist kontrolü
     const check = await checkRedAndBlackLists(mint, chain, timestamp);
     // const participantsPath = path.join(process.cwd(), 'data', 'participants.json');
     // const existing = JSON.parse(await fs.readFile(participantsPath, 'utf-8'));
@@ -77,15 +76,15 @@ export async function POST(req) {
 
     if (check.status === 'invalidated') {
       // existing.push({
-        // id: existing.length + 1,
-        // wallet_address,
-        // token_from,
-        // mint,
-        // amount,
-        // chain,
-        // timestamp,
-        // status: 'invalidated',
-        // refund_requested: false
+      //   id: existing.length + 1,
+      //   wallet_address,
+      //   token_from,
+      //   mint,
+      //   amount,
+      //   chain,
+      //   timestamp,
+      //   status: 'invalidated',
+      //   refund_requested: false
       // });
       // await fs.writeFile(participantsPath, JSON.stringify(existing, null, 2), 'utf-8');
       return Response.json({
@@ -113,11 +112,9 @@ export async function POST(req) {
       const senderTokenAccount = await getAssociatedTokenAddress(mintPubkey, senderPubkey);
       const receiverTokenAccount = await getAssociatedTokenAddress(mintPubkey, receiverPubkey);
 
-      // 🔎 SPL token decimal bilgisi alınır
       const mintInfo = await connection.getParsedAccountInfo(mintPubkey);
       const decimals = mintInfo.value?.data?.parsed?.info?.decimals || 6;
 
-      // 📦 Alıcı token hesabı var mı kontrolü
       try {
         await getAccount(connection, receiverTokenAccount);
       } catch {
@@ -131,26 +128,16 @@ export async function POST(req) {
           senderTokenAccount,
           receiverTokenAccount,
           senderPubkey,
-          Math.floor(amount * 10 ** decimals),
+          Math.floor(amount * (10 ** decimals)),
           [],
           TOKEN_PROGRAM_ID
         )
       );
     }
 
-    // 🧾 Katılımcı kayıt işlemi
-    existing.push({
-      id: existing.length + 1,
-      wallet_address,
-      token_from,
-      mint,
-      amount,
-      chain,
-      timestamp,
-      status: 'completed'
-    });
-
-    await fs.writeFile(participantsPath, JSON.stringify(existing, null, 2), 'utf-8');
+    // 🧾 Katılımcı kayıt işlemleri geçici olarak iptal edildi
+    // existing.push({...})
+    // await fs.writeFile(...)
 
     // 🧠 Phantom’a gönderilmek üzere base64-encoded işlem döndürülüyor
     return Response.json({
