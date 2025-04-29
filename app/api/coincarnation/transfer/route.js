@@ -160,6 +160,9 @@ export async function POST(req) {
 
   } catch (err) {
     console.error('[Server Error]', err);
-    return Response.json({ message: '❌ Server error.' }, { status: 500 });
-  }
+    return Response.json({
+      message: '❌ Server error.',
+      error: err.message || 'Unknown server error'
+    }, { status: 500 });
+  }  
 }
