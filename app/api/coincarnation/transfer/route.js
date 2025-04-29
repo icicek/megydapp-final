@@ -1,14 +1,25 @@
 import { promises as fs } from 'fs';
 import path from 'path';
-import { Connection, PublicKey, Transaction, SystemProgram } from '@solana/web3.js';
-import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID } from '@solana/spl-token';
+import {
+  Connection,
+  PublicKey,
+  Transaction,
+  SystemProgram,
+} from '@solana/web3.js';
+import {
+  getAssociatedTokenAddress,
+  createTransferInstruction,
+  getAccount,
+  TOKEN_PROGRAM_ID,
+} from '@solana/spl-token';
 
-// QuickNode bağlantın
+// 🔗 QuickNode bağlantısı
 const connection = new Connection("https://dry-sly-shard.solana-mainnet.quiknode.pro/2caf002b99622...");
 
-// Coincarnation hedef cüzdanın
+// 🎯 Coincarnation hedef cüzdan
 const COINCARNATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd";
 
+// 🔒 Redlist / Blacklist kontrol fonksiyonu
 async function checkRedAndBlackLists(tokenMint, tokenChain, userTimestampISO) {
   const redlistPath = path.join(process.cwd(), 'data', 'redlist_tokens.json');
   const blacklistPath = path.join(process.cwd(), 'data', 'blacklist_tokens.json');
@@ -26,8 +37,6 @@ async function checkRedAndBlackLists(tokenMint, tokenChain, userTimestampISO) {
   );
   if (blackItem) {
     const addedAt = new Date(blackItem.addedAt);
-    console.log('[🛑 Blacklist Match]', mintNormalized, chainNormalized, 'Added:', addedAt.toISOString(), 'Now:', userTimestamp.toISOString());
-
     if (userTimestamp >= addedAt) {
       return { status: 'blocked', list: 'blacklist' };
     } else {
@@ -41,8 +50,6 @@ async function checkRedAndBlackLists(tokenMint, tokenChain, userTimestampISO) {
   );
   if (redItem) {
     const addedAt = new Date(redItem.addedAt);
-    console.log('[🛑 Redlist Match]', mintNormalized, chainNormalized, 'Added:', addedAt.toISOString(), 'Now:', userTimestamp.toISOString());
-
     if (userTimestamp >= addedAt) {
       return { status: 'blocked', list: 'redlist' };
     }
@@ -57,8 +64,8 @@ export async function POST(req) {
     const { wallet_address, token_from, mint, amount, chain } = body;
     const timestamp = new Date().toISOString();
 
+    // 🔍 Blacklist / Redlist kontrolü
     const check = await checkRedAndBlackLists(mint, chain, timestamp);
-
     const participantsPath = path.join(process.cwd(), 'data', 'participants.json');
     const existing = JSON.parse(await fs.readFile(participantsPath, 'utf-8'));
 
@@ -80,23 +87,19 @@ export async function POST(req) {
         status: 'invalidated',
         refund_requested: false
       });
-
       await fs.writeFile(participantsPath, JSON.stringify(existing, null, 2), 'utf-8');
-
       return Response.json({
         message: `❌ This token is now invalid. Your participation is recorded as invalidated. You may request a refund.`
       }, { status: 200 });
     }
 
-    // === 🔥 Blockchain Üzerinde Transfer İşlemi Başlıyor ===
-
+    // 🧠 Cüzdanlar
     const senderPubkey = new PublicKey(wallet_address);
     const receiverPubkey = new PublicKey(COINCARNATION_WALLET);
-
     const transaction = new Transaction();
 
     if (mint === "SOL") {
-      // SOL gönderimi
+      // 💸 SOL gönderimi
       transaction.add(
         SystemProgram.transfer({
           fromPubkey: senderPubkey,
@@ -105,27 +108,37 @@ export async function POST(req) {
         })
       );
     } else {
-      // SPL Token gönderimi
+      // 🪙 SPL token gönderimi
       const mintPubkey = new PublicKey(mint);
-
       const senderTokenAccount = await getAssociatedTokenAddress(mintPubkey, senderPubkey);
       const receiverTokenAccount = await getAssociatedTokenAddress(mintPubkey, receiverPubkey);
+
+      // 🔎 SPL token decimal bilgisi alınır
+      const mintInfo = await connection.getParsedAccountInfo(mintPubkey);
+      const decimals = mintInfo.value?.data?.parsed?.info?.decimals || 6;
+
+      // 📦 Alıcı token hesabı var mı kontrolü
+      try {
+        await getAccount(connection, receiverTokenAccount);
+      } catch {
+        return Response.json({
+          error: `❌ Receiver token account does not exist for ${token_from}. Please contact support.`,
+        }, { status: 500 });
+      }
 
       transaction.add(
         createTransferInstruction(
           senderTokenAccount,
           receiverTokenAccount,
           senderPubkey,
-          Math.floor(amount * (10 ** 6)) // 6 decimal standard assumed for SPL
+          Math.floor(amount * 10 ** decimals),
+          [],
+          TOKEN_PROGRAM_ID
         )
       );
     }
 
-    // Burada frontend cüzdanında onaylama adımı olacak.
-    // Şu an backend sadece transaction hazırlıyor.
-
-    // === 🔥 Katılımcı Kayıt İşlemi ===
-
+    // 🧾 Katılımcı kayıt işlemi
     existing.push({
       id: existing.length + 1,
       wallet_address,
@@ -139,7 +152,11 @@ export async function POST(req) {
 
     await fs.writeFile(participantsPath, JSON.stringify(existing, null, 2), 'utf-8');
 
-    return Response.json({ message: '✅ Coincarnation transaction prepared successfully.', transaction: transaction.serialize({ requireAllSignatures: false }).toString('base64') });
+    // 🧠 Phantom’a gönderilmek üzere base64-encoded işlem döndürülüyor
+    return Response.json({
+      message: '✅ Transaction prepared.',
+      transaction: transaction.serialize({ requireAllSignatures: false }).toString("base64")
+    });
 
   } catch (err) {
     console.error('[Server Error]', err);
