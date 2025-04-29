@@ -66,8 +66,8 @@ export async function POST(req) {
 
     // 🔍 Blacklist / Redlist kontrolü
     const check = await checkRedAndBlackLists(mint, chain, timestamp);
-    const participantsPath = path.join(process.cwd(), 'data', 'participants.json');
-    const existing = JSON.parse(await fs.readFile(participantsPath, 'utf-8'));
+    // const participantsPath = path.join(process.cwd(), 'data', 'participants.json');
+    // const existing = JSON.parse(await fs.readFile(participantsPath, 'utf-8'));
 
     if (check.status === 'blocked') {
       return Response.json({
@@ -76,18 +76,18 @@ export async function POST(req) {
     }
 
     if (check.status === 'invalidated') {
-      existing.push({
-        id: existing.length + 1,
-        wallet_address,
-        token_from,
-        mint,
-        amount,
-        chain,
-        timestamp,
-        status: 'invalidated',
-        refund_requested: false
-      });
-      await fs.writeFile(participantsPath, JSON.stringify(existing, null, 2), 'utf-8');
+      // existing.push({
+        // id: existing.length + 1,
+        // wallet_address,
+        // token_from,
+        // mint,
+        // amount,
+        // chain,
+        // timestamp,
+        // status: 'invalidated',
+        // refund_requested: false
+      // });
+      // await fs.writeFile(participantsPath, JSON.stringify(existing, null, 2), 'utf-8');
       return Response.json({
         message: `❌ This token is now invalid. Your participation is recorded as invalidated. You may request a refund.`
       }, { status: 200 });
