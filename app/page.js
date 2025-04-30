@@ -105,11 +105,13 @@ export default function Home() {
       {/* ✅ Sadece işlem yapan kullanıcıya gösterilen buton */}
       {hasCoincarneDone && (
         <div className="mt-8 flex justify-center">
-          <Link href="/claim">
-            <button className="px-6 py-3 bg-green-500 hover:bg-green-600 text-black text-lg font-bold rounded-xl transition-all duration-300">
-              🎯 Go to Profile
-            </button>
+          <Link
+            href="/claim"
+            className="px-6 py-3 bg-green-500 hover:bg-green-600 text-black text-lg font-bold rounded-xl transition-all duration-300"
+          >
+            🎯 Go to Profile
           </Link>
+
         </div>
       )}
 
