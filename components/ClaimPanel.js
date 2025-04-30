@@ -88,9 +88,11 @@ export default function ClaimPanel({
       ) : (
         <div className="text-center mb-12 mt-8">
           <p className="text-lg text-gray-300 mb-4">You haven’t Coincarned yet.</p>
-          <Button className="bg-green-500 hover:bg-green-600 text-black font-bold px-6 py-3 rounded-xl text-lg" asChild>
-            <a href="/">🚀 Start Coincarnating</a>
-          </Button>
+          <Link href="/" passHref>
+            <Button className="bg-green-500 hover:bg-green-600 text-black font-bold px-6 py-3 rounded-xl text-lg">
+                🚀 Start Coincarnating
+            </Button>
+          </Link>
         </div>
       )}
 
