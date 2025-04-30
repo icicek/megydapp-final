@@ -103,7 +103,7 @@ export default function Home() {
       </div>
 
       {/* ✅ Sadece işlem yapan kullanıcıya gösterilen buton */}
-      {hasCoincarneDone && (
+      {true && (
         <div className="mt-8 flex justify-center">
           <Link
             href="/claim"
@@ -111,7 +111,6 @@ export default function Home() {
           >
             🎯 Go to Profile
           </Link>
-
         </div>
       )}
 
