@@ -1,6 +1,5 @@
 'use client';
 
-const rpcConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,6 +12,7 @@ import {
   Transaction,
   LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
+const rpcConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
 
 export default function ClaimPanel({
   walletAddress,
@@ -169,31 +169,35 @@ export default function ClaimPanel({
             </Card>
           </div>
 
-          <div className="w-full max-w-xl mb-8 text-white text-sm space-y-4">
-            <div>
-              <label className="block mb-1">Amount to Claim:</label>
+          <div className="w-full max-w-xl mb-8 text-white text-sm space-y-6">
+
+            {/* Amount to Claim */}
+          <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
+              <label className="block mb-2 text-gray-300 font-medium">Amount to Claim:</label>
               <input
                 type="number"
-                className="w-full p-2 rounded text-black"
+                className="w-full p-3 rounded-md text-black bg-white"
                 placeholder="Enter MEGY amount"
                 value={amountToClaim}
                 onChange={(e) => setAmountToClaim(e.target.value)}
               />
             </div>
 
-            <div>
-              <label className="block mb-1">Target Wallet (optional):</label>
+            {/* Target Wallet */}
+            <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
+              <label className="block mb-2 text-gray-300 font-medium">Target Wallet (optional):</label>
               <input
                 type="text"
-                className="w-full p-2 rounded text-black"
+                className="w-full p-3 rounded-md text-black bg-white"
                 placeholder="Leave empty to use connected wallet"
                 value={targetWallet}
                 onChange={(e) => setTargetWallet(e.target.value)}
               />
             </div>
 
+            {/* Fee Info */}
             {claimOpen && parseFloat(amountToClaim) > 0 && (
-              <p className="text-yellow-400 mt-2">
+              <p className="text-yellow-400 text-sm pl-1">
                 ⚠️ You will be charged a 0.5 USD fee in SOL during this claim.
               </p>
             )}
