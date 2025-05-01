@@ -31,6 +31,7 @@ export default function ClaimPanel({
   const { connection } = useConnection();
 
   const handleClaim = async () => {
+    console.log('🔍 claimOpen value:', claimOpen);
     const amount = parseFloat(amountToClaim);
     const feeWallet = new PublicKey("HPBNVF9ATsnkDhGmQB4xoLC5tWBWQbTyBjsiQAN3dYXH");
 
