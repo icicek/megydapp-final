@@ -7,7 +7,7 @@ import { Connection, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 // ✅ QuickNode bağlantısı
-const rpcConnection = new Connection("https://light-frequent-paper.solana-mainnet.quiknode.pro/daf4ba6244791da4896416b80538dd7c3be27a0d/");
+const rpcConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
 
 const TOKEN_LIST_URL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
 
