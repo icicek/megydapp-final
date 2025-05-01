@@ -23,6 +23,17 @@ export default function ClaimPanel({
   globalStats,
   claimOpen
 }) {
+  console.log('🚨 ClaimPanel loaded');
+  console.log('✅ Props:', {
+    walletAddress,
+    coincarnatorNo,
+    contributionUSD,
+    shareRatio,
+    claimableMEGY,
+    claimStatus,
+    globalStats,
+    claimOpen
+  });
   const [amountToClaim, setAmountToClaim] = useState('');
   const [targetWallet, setTargetWallet] = useState(walletAddress);
   const [isLoading, setIsLoading] = useState(false);
