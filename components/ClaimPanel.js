@@ -1,5 +1,6 @@
 'use client';
 
+const rpcConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -81,9 +82,18 @@ export default function ClaimPanel({
         })
       );
 
-      const signature = await sendTransaction(transaction, connection);
-      await connection.confirmTransaction(signature, 'confirmed');
+      const signature = await sendTransaction(transaction, rpcConnection);
+
+      const latestBlockhash = await rpcConnection.getLatestBlockhash();
+
+      await rpcConnection.confirmTransaction({
+        signature,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+        blockhash: latestBlockhash.blockhash,
+      });
+
       console.log('✅ Fee paid with tx:', signature);
+
 
       // 🎯 2. CLAIM POST API
       const res = await fetch('/api/claim', {
