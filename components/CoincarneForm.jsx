@@ -133,6 +133,7 @@ export default function CoincarneForm() {
           const randomId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
           setSuccessData({ id: randomId, token: metaName(mint) });
           setMessage(null);
+          localStorage.setItem('coincarneDone', 'true');
         } else {
           setMessage(`✅ Coincarnation successful without blockchain transfer.`);
           setMessageType("success");

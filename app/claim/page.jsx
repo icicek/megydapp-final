@@ -43,6 +43,7 @@ export default function ClaimPage() {
       claimableMEGY={15000}
       claimStatus={false}
       globalStats={globalStats}
+      claimOpen={true}
     />
   );
 }
