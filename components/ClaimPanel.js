@@ -24,7 +24,7 @@ export default function ClaimPanel({
   claimableMEGY,
   claimStatus,
   globalStats,
-  claimOpen
+  claimOpen,
 }) {
   console.log('🚨 ClaimPanel loaded');
   console.log('✅ Props:', {
@@ -35,7 +35,7 @@ export default function ClaimPanel({
     claimableMEGY,
     claimStatus,
     globalStats,
-    claimOpen
+    claimOpen,
   });
 
   const [amountToClaim, setAmountToClaim] = useState('');
@@ -48,7 +48,7 @@ export default function ClaimPanel({
   const handleClaim = async () => {
     console.log('🔍 claimOpen value:', claimOpen);
     const amount = parseFloat(amountToClaim);
-    const feeWallet = new PublicKey("HPBNVF9ATsnkDhGmQB4xoLC5tWBWQbTyBjsiQAN3dYXH");
+    const feeWallet = new PublicKey('HPBNVF9ATsnkDhGmQB4xoLC5tWBWQbTyBjsiQAN3dYXH');
 
     if (!amount || amount <= 0 || amount > claimableMEGY) {
       alert('Please enter a valid amount to claim.');
@@ -73,8 +73,7 @@ export default function ClaimPanel({
     setIsLoading(true);
 
     try {
-      // 🎯 1. FEE TRANSFER ($0.5 in SOL)
-      const solPriceUSD = 100; // Temp sabit: 1 SOL = $100
+      const solPriceUSD = 100;
       const feeInSOL = 0.5 / solPriceUSD;
 
       const transaction = new Transaction().add(
@@ -86,7 +85,6 @@ export default function ClaimPanel({
       );
 
       const signature = await sendTransaction(transaction, rpcConnection);
-
       const latestBlockhash = await rpcConnection.getLatestBlockhash();
 
       await rpcConnection.confirmTransaction({
@@ -97,38 +95,21 @@ export default function ClaimPanel({
 
       console.log('✅ Fee paid with tx:', signature);
 
-      // 🎯 2. CLAIM POST API
-      const res = await fetch('/api/claim', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          fromWallet: walletAddress,
-          toWallet: targetWallet,
-          amount,
-          feeSignature: signature,
-        }),
+      const result = await saveClaim({
+        walletAddress,
+        targetAddress: targetWallet,
+        amount,
+        solFeeTx: signature,
+        megyClaimTx: 'pending',
       });
 
-      const data = await res.json();
-
-      if (res.ok) {
-        alert(`✅ Claim successful! TX: ${data.tx || 'Pending'}`);
-
-        // 🎯 3. SAVE TO SUPABASE
-        await saveClaim({
-          walletAddress: walletAddress,
-          targetAddress: targetWallet,
-          amount: amount,
-          solFeeTx: signature,
-          megyClaimTx: data.tx || null,
-        });
-
+      if (result.success) {
+        alert('✅ Claim successful! Your record has been saved.');
       } else {
-        alert(`❌ Claim failed: ${data.error || 'Unknown error'}`);
+        alert('❌ Claim failed: ' + result.error.message);
       }
-
     } catch (err) {
-      console.error(err);
+      console.error('⚠️ Claim request failed:', err);
       alert('⚠️ Claim request failed.');
     }
 
@@ -140,7 +121,9 @@ export default function ClaimPanel({
   return (
     <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-black via-gray-900 to-black p-8 text-white">
       <h1 className="text-4xl font-bold mb-4 text-center">🎯 Your MEGY Profile</h1>
-      <p className="text-gray-400 text-center mb-10">Claim your rewards. Fee required only during claim.</p>
+      <p className="text-gray-400 text-center mb-10">
+        Claim your rewards. Fee required only during claim.
+      </p>
 
       <Card className="w-full max-w-2xl mb-6 bg-gray-800 border border-gray-700 shadow-md">
         <CardContent className="p-6">
@@ -182,8 +165,6 @@ export default function ClaimPanel({
           </div>
 
           <div className="w-full max-w-xl mb-8 text-white text-sm space-y-6">
-
-            {/* Amount to Claim */}
             <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
               <label className="block mb-2 text-gray-300 font-medium">Amount to Claim:</label>
               <input
@@ -195,7 +176,6 @@ export default function ClaimPanel({
               />
             </div>
 
-            {/* Target Wallet */}
             <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
               <label className="block mb-2 text-gray-300 font-medium">Target Wallet (optional):</label>
               <input
@@ -207,7 +187,6 @@ export default function ClaimPanel({
               />
             </div>
 
-            {/* Fee Info */}
             {claimOpen && parseFloat(amountToClaim) > 0 && (
               <p className="text-yellow-400 text-sm pl-1">
                 ⚠️ You will be charged a 0.5 USD fee in SOL during this claim.
