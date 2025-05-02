@@ -1,5 +1,6 @@
 'use client';
 
+import { saveClaim } from '@/lib/saveClaim';
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +13,7 @@ import {
   Transaction,
   LAMPORTS_PER_SOL,
 } from '@solana/web3.js';
+
 const rpcConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
 
 export default function ClaimPanel({
@@ -35,6 +37,7 @@ export default function ClaimPanel({
     globalStats,
     claimOpen
   });
+
   const [amountToClaim, setAmountToClaim] = useState('');
   const [targetWallet, setTargetWallet] = useState(walletAddress);
   const [isLoading, setIsLoading] = useState(false);
@@ -94,7 +97,6 @@ export default function ClaimPanel({
 
       console.log('✅ Fee paid with tx:', signature);
 
-
       // 🎯 2. CLAIM POST API
       const res = await fetch('/api/claim', {
         method: 'POST',
@@ -111,6 +113,16 @@ export default function ClaimPanel({
 
       if (res.ok) {
         alert(`✅ Claim successful! TX: ${data.tx || 'Pending'}`);
+
+        // 🎯 3. SAVE TO SUPABASE
+        await saveClaim({
+          walletAddress: walletAddress,
+          targetAddress: targetWallet,
+          amount: amount,
+          solFeeTx: signature,
+          megyClaimTx: data.tx || null,
+        });
+
       } else {
         alert(`❌ Claim failed: ${data.error || 'Unknown error'}`);
       }
@@ -172,7 +184,7 @@ export default function ClaimPanel({
           <div className="w-full max-w-xl mb-8 text-white text-sm space-y-6">
 
             {/* Amount to Claim */}
-          <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
+            <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
               <label className="block mb-2 text-gray-300 font-medium">Amount to Claim:</label>
               <input
                 type="number"
