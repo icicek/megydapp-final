@@ -5,8 +5,8 @@ import { createClient } from '@supabase/supabase-js';
 
 // ✅ Supabase bağlantısı
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // Özel işlem için service role key kullanıyoruz
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_ANON_KEY
 );
 
 export async function POST(req) {
