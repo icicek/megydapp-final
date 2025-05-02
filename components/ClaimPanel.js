@@ -1,6 +1,6 @@
 'use client';
 
-import { saveClaim } from '@/lib/saveClaim';
+import saveClaim from '@/lib/saveClaim';
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -46,6 +46,7 @@ export default function ClaimPanel({
   const { connection } = useConnection();
 
   const handleClaim = async () => {
+    console.log('✅ saveClaim type:', typeof saveClaim); // function olmalı
     console.log('🔍 claimOpen value:', claimOpen);
     const amount = parseFloat(amountToClaim);
     const feeWallet = new PublicKey('HPBNVF9ATsnkDhGmQB4xoLC5tWBWQbTyBjsiQAN3dYXH');
