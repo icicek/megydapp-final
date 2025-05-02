@@ -28,6 +28,9 @@ export async function POST(req) {
     return NextResponse.json({ success: true, tx: 'MEGY_TRANSFER_TX_PENDING' });
   } catch (err) {
     console.error('❌ Claim API error:', err);
-    return NextResponse.json({ error: err.message || 'Internal server error.' }, { status: 500 });
+    return new Response(`Internal Server Error: ${err.message}`, {
+      status: 500,
+    });
   }
+    
 }
