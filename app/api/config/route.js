@@ -1,7 +1,7 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 
-const CONFIG_PATH = path.join(process.cwd(), 'data', 'config.json');
+const configPath = path.join(process.cwd(), 'data', 'config.json');
 
 export async function GET() {
   try {

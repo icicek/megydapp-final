@@ -2,7 +2,7 @@ import { writeFile, readFile } from 'fs/promises';
 import path from 'path';
 import { NextResponse } from 'next/server';
 
-const configPath = path.join(process.cwd(), 'public', 'config.json');
+const configPath = path.join(process.cwd(), 'data', 'config.json');
 
 export async function POST(req) {
   try {

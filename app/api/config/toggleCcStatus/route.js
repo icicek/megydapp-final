@@ -6,7 +6,7 @@ export async function POST(req) {
   try {
     const { active } = await req.json();
 
-    const configPath = path.join(process.cwd(), 'public', 'config.json');
+    const configPath = path.join(process.cwd(), 'data', 'config.json');
     const file = await fs.readFile(configPath, 'utf-8');
     const currentConfig = JSON.parse(file);
 
