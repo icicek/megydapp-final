@@ -8,8 +8,7 @@ import Link from 'next/link';
 
 export default function ClaimPanel({ walletAddress }) {
   const [data, setData] = useState(null);
-  const [amountToClaim, setAmountToClaim] = useState('');
-  const [targetWallet, setTargetWallet] = useState(walletAddress);
+  const [claimed, setClaimed] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -18,6 +17,9 @@ export default function ClaimPanel({ walletAddress }) {
         const json = await res.json();
         const userData = json.find((entry) => entry.wallet_address === walletAddress);
         setData(userData);
+        if (userData?.claim_status === true) {
+          setClaimed(true);
+        }
       } catch (err) {
         console.error('Failed to load claim snapshot:', err);
       }
@@ -39,13 +41,12 @@ export default function ClaimPanel({ walletAddress }) {
     contribution_usd,
     share_ratio,
     megy_amount,
-    claim_status,
   } = data;
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-black via-gray-900 to-black p-8 text-white">
       <h1 className="text-4xl font-bold mb-4 text-center">🎯 Your MEGY Profile</h1>
-      <p className="text-gray-400 text-center mb-10">This is a preview. Claims are not active.</p>
+      <p className="text-gray-400 text-center mb-10">This is a preview. Claims will be enabled by the team.</p>
 
       <Card className="w-full max-w-2xl mb-6 bg-gray-800 border border-gray-700 shadow-md">
         <CardContent className="p-6">
@@ -85,11 +86,11 @@ export default function ClaimPanel({ walletAddress }) {
         <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
           <label className="block mb-2 text-gray-300 font-medium">Amount to Claim:</label>
           <input
-            type="number"
+            type="text"
             className="w-full p-3 rounded-md text-black bg-white"
-            placeholder="Enter MEGY amount"
-            value={amountToClaim}
-            onChange={(e) => setAmountToClaim(e.target.value)}
+            placeholder="Full amount will be claimed"
+            value={megy_amount}
+            readOnly
           />
         </div>
         <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
@@ -98,18 +99,33 @@ export default function ClaimPanel({ walletAddress }) {
             type="text"
             className="w-full p-3 rounded-md text-black bg-white"
             placeholder="Leave empty to use connected wallet"
-            value={targetWallet}
-            onChange={(e) => setTargetWallet(e.target.value)}
+            defaultValue={walletAddress}
+            readOnly
           />
         </div>
+        <p className="text-yellow-400 text-sm pl-1">
+          ⚠️ You will be charged a 0.5 USD fee in SOL during claim.
+        </p>
       </div>
 
-      <Button
-        disabled
-        className="bg-gray-600 text-white font-bold px-8 py-4 rounded-2xl text-xl cursor-not-allowed"
-      >
-        🚫 Claim Disabled
-      </Button>
+      {!claimed ? (
+        <Button
+          onClick={() => {
+            alert('✅ Simulated claim completed.');
+            setClaimed(true);
+          }}
+          className="bg-green-500 hover:bg-green-600 text-black font-bold px-8 py-4 rounded-2xl text-xl"
+        >
+          🚀 Claim Now
+        </Button>
+      ) : (
+        <Button
+          disabled
+          className="bg-gray-600 text-white font-bold px-8 py-4 rounded-2xl text-xl cursor-not-allowed"
+        >
+          ✅ Already Claimed
+        </Button>
+      )}
 
       <div className="text-center mt-12">
         <Link href="/">
