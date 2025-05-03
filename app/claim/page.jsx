@@ -22,5 +22,16 @@ export default function ClaimPage() {
     );
   }
 
-  return <ClaimPanel walletAddress={walletAddress} />;
+  return (
+    <ClaimPanel
+      walletAddress={walletAddress}
+      coincarnatorNo={777}
+      contributionUSD={1200}
+      shareRatio={3.5}
+      claimableMEGY={15000}
+      claimStatus={false}
+      globalStats={{ totalUsd: 1000000, totalParticipants: 1234, totalTokens: 45 }}
+      claimOpen={true} // ✅ BU SATIR claim'i aktif eder
+    />
+  );  
 }
