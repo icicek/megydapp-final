@@ -122,6 +122,11 @@ export default function CoincarneForm() {
         }),
       });
 
+      if (res.status === 403) {
+        alert('🚫 Coincarnation is currently paused. Please try again later.');
+        return;
+      }      
+
       const data = await response.json();
 
       if (response.ok) {

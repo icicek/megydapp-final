@@ -16,9 +16,16 @@ export async function GET() {
 export async function POST(req) {
   try {
     const body = await req.json();
-    const newConfig = { endDate: body.endDate };
-    await fs.writeFile(CONFIG_PATH, JSON.stringify(newConfig, null, 2), 'utf-8');
-    return Response.json({ message: 'End date updated successfully' });
+    const existing = JSON.parse(await fs.readFile(CONFIG_PATH, 'utf-8'));
+
+    const updated = {
+      ...existing,
+      ...(body.endDate && { endDate: body.endDate }),
+      ...(typeof body.cc_active === 'boolean' && { cc_active: body.cc_active })
+    };
+
+    await fs.writeFile(CONFIG_PATH, JSON.stringify(updated, null, 2), 'utf-8');
+    return Response.json({ message: 'Config updated successfully' });
   } catch (error) {
     return new Response('Failed to update config', { status: 500 });
   }

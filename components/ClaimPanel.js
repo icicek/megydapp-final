@@ -1,4 +1,3 @@
-// ✅ File: components/ClaimPanel.js
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -9,7 +8,9 @@ import Link from 'next/link';
 export default function ClaimPanel({ walletAddress }) {
   const [data, setData] = useState(null);
   const [claimed, setClaimed] = useState(false);
+  const [claimOpen, setClaimOpen] = useState(false); // ✅ Claim açık mı?
 
+  // Kullanıcı verisini çek
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -27,6 +28,20 @@ export default function ClaimPanel({ walletAddress }) {
 
     loadData();
   }, [walletAddress]);
+
+  // Config.json'dan claim durumu çek
+  useEffect(() => {
+    const fetchClaimStatus = async () => {
+      try {
+        const res = await fetch('/config.json');
+        const config = await res.json();
+        setClaimOpen(config.claim_open);
+      } catch (err) {
+        console.error('Failed to fetch claim status:', err);
+      }
+    };
+    fetchClaimStatus();
+  }, []);
 
   if (!data) {
     return (
@@ -46,7 +61,9 @@ export default function ClaimPanel({ walletAddress }) {
   return (
     <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-black via-gray-900 to-black p-8 text-white">
       <h1 className="text-4xl font-bold mb-4 text-center">🎯 Your MEGY Profile</h1>
-      <p className="text-gray-400 text-center mb-10">This is a preview. Claims will be enabled by the team.</p>
+      <p className="text-gray-400 text-center mb-10">
+        {claimOpen ? 'Claim is now available.' : 'This is a preview. Claims will be enabled by the team.'}
+      </p>
 
       <Card className="w-full max-w-2xl mb-6 bg-gray-800 border border-gray-700 shadow-md">
         <CardContent className="p-6">
@@ -109,15 +126,24 @@ export default function ClaimPanel({ walletAddress }) {
       </div>
 
       {!claimed ? (
-        <Button
-          onClick={() => {
-            alert('✅ Simulated claim completed.');
-            setClaimed(true);
-          }}
-          className="bg-green-500 hover:bg-green-600 text-black font-bold px-8 py-4 rounded-2xl text-xl"
-        >
-          🚀 Claim Now
-        </Button>
+        claimOpen ? (
+          <Button
+            onClick={() => {
+              alert('✅ Simulated claim completed.');
+              setClaimed(true);
+            }}
+            className="bg-green-500 hover:bg-green-600 text-black font-bold px-8 py-4 rounded-2xl text-xl"
+          >
+            🚀 Claim Now
+          </Button>
+        ) : (
+          <Button
+            disabled
+            className="bg-gray-600 text-white font-bold px-8 py-4 rounded-2xl text-xl cursor-not-allowed"
+          >
+            🚫 Claim Disabled
+          </Button>
+        )
       ) : (
         <Button
           disabled

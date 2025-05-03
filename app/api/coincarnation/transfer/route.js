@@ -60,13 +60,20 @@ async function checkRedAndBlackLists(tokenMint, tokenChain, userTimestampISO) {
 
 export async function POST(req) {
   try {
+    // ✅ Config dosyasından Coincarnation açık mı kontrolü
+    const configPath = path.join(process.cwd(), 'public', 'config.json');
+    const configData = JSON.parse(await fs.readFile(configPath, 'utf-8'));
+    if (!configData.coincarnation_active) {
+      return Response.json({
+        message: '🚫 Coincarnation is currently paused. Please try again later.'
+      }, { status: 403 });
+    }
+
     const body = await req.json();
     const { wallet_address, token_from, mint, amount, chain } = body;
     const timestamp = new Date().toISOString();
 
     const check = await checkRedAndBlackLists(mint, chain, timestamp);
-    // const participantsPath = path.join(process.cwd(), 'data', 'participants.json');
-    // const existing = JSON.parse(await fs.readFile(participantsPath, 'utf-8'));
 
     if (check.status === 'blocked') {
       return Response.json({
@@ -75,18 +82,6 @@ export async function POST(req) {
     }
 
     if (check.status === 'invalidated') {
-      // existing.push({
-      //   id: existing.length + 1,
-      //   wallet_address,
-      //   token_from,
-      //   mint,
-      //   amount,
-      //   chain,
-      //   timestamp,
-      //   status: 'invalidated',
-      //   refund_requested: false
-      // });
-      // await fs.writeFile(participantsPath, JSON.stringify(existing, null, 2), 'utf-8');
       return Response.json({
         message: `❌ This token is now invalid. Your participation is recorded as invalidated. You may request a refund.`
       }, { status: 200 });
@@ -101,7 +96,6 @@ export async function POST(req) {
     transaction.feePayer = senderPubkey;
 
     if (mint === "SOL") {
-      // 💸 SOL gönderimi
       transaction.add(
         SystemProgram.transfer({
           fromPubkey: senderPubkey,
@@ -110,7 +104,6 @@ export async function POST(req) {
         })
       );
     } else {
-      // 🪙 SPL token gönderimi
       const mintPubkey = new PublicKey(mint);
       const senderTokenAccount = await getAssociatedTokenAddress(mintPubkey, senderPubkey);
       const receiverTokenAccount = await getAssociatedTokenAddress(mintPubkey, receiverPubkey);
@@ -138,11 +131,6 @@ export async function POST(req) {
       );
     }
 
-    // 🧾 Katılımcı kayıt işlemleri geçici olarak iptal edildi
-    // existing.push({...})
-    // await fs.writeFile(...)
-
-    // 🧠 Phantom’a gönderilmek üzere base64-encoded işlem döndürülüyor
     return Response.json({
       message: '✅ Transaction prepared.',
       transaction: transaction.serialize({ requireAllSignatures: false }).toString("base64")
@@ -154,5 +142,5 @@ export async function POST(req) {
       message: '❌ Server error.',
       error: err.message || 'Unknown server error'
     }, { status: 500 });
-  }  
+  }
 }
