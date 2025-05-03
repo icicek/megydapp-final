@@ -7,9 +7,14 @@ export async function POST(req) {
     const { active } = await req.json();
 
     const configPath = path.join(process.cwd(), 'data', 'config.json');
+    
     const file = await fs.readFile(configPath, 'utf-8');
     const currentConfig = JSON.parse(file);
-
+    
+    if (typeof active !== 'boolean') {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    }
+    
     const updatedConfig = {
       ...currentConfig,
       coincarnation_active: !!active,

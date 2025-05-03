@@ -8,12 +8,16 @@ export async function POST(req) {
   try {
     const { open } = await req.json();
 
+    if (typeof open !== 'boolean') {
+      return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+    }
+
     const file = await readFile(configPath, 'utf-8');
     const currentConfig = JSON.parse(file);
 
     const updatedConfig = {
       ...currentConfig,
-      claim_open: !!open,
+      claim_open: open,
     };
 
     await writeFile(configPath, JSON.stringify(updatedConfig, null, 2), 'utf-8');
