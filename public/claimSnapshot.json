@@ -1,0 +1,35 @@
+[
+    {
+      "wallet_address": "B3DMWpiWuaCMj7wELSrLeoeaqSdSR1idAvX3d9istKe4",
+      "coincarnator_no": 1,
+      "contribution_usd": 500,
+      "share_ratio": 2.5,
+      "megy_amount": 7000,
+      "claim_status": false
+    },
+    {
+      "wallet_address": "0x456...def",
+      "coincarnator_no": 2,
+      "contribution_usd": 1500,
+      "share_ratio": 5.1,
+      "megy_amount": 20000,
+      "claim_status": false
+    },
+    {
+      "wallet_address": "0x789...ghi",
+      "coincarnator_no": 3,
+      "contribution_usd": 250,
+      "share_ratio": 1.3,
+      "megy_amount": 4000,
+      "claim_status": true
+    },
+    {
+      "wallet_address": "0xabc...xyz",
+      "coincarnator_no": 4,
+      "contribution_usd": 850,
+      "share_ratio": 3.7,
+      "megy_amount": 11000,
+      "claim_status": false
+    }
+  ]
+  

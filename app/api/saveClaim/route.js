@@ -1,43 +1,34 @@
-// ✅ File: app/api/saveClaim/route.js
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-// Environment değişkenlerinden Supabase bağlantısı oluştur
 const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY // ⚠️ Bu key .env dosyasında olmalı, public değil!
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 );
 
-export async function POST(req) {
+export async function POST(request) {
   try {
-    const body = await req.json();
-    const { walletAddress, targetAddress, amount, solFeeTx, megyClaimTx } = body;
+    const body = await request.json();
 
-    if (!walletAddress || !targetAddress || !amount || !solFeeTx) {
-      return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
-    }
+    const { wallet_address, claim_address, amount, claimed_at } = body;
 
-    const { error } = await supabase
-      .from('claims')
-      .insert([
-        {
-          wallet_address: walletAddress,
-          target_address: targetAddress,
-          amount,
-          sol_fee_tx: solFeeTx,
-          megy_claim_tx: megyClaimTx || null,
-          timestamp: new Date().toISOString(),
-        },
-      ]);
+    const { data, error } = await supabase.from('claims').insert([
+      {
+        wallet_address,
+        claim_address,
+        amount,
+        claimed_at,
+      }
+    ]);
 
     if (error) {
       console.error('❌ Supabase insert error:', error.message);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data });
   } catch (err) {
-    console.error('❌ saveClaim API error:', err);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    console.error('❌ API error:', err);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
