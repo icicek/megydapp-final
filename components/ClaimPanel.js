@@ -1,3 +1,4 @@
+// ✅ File: components/ClaimPanel.js
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -7,6 +8,8 @@ import Link from 'next/link';
 
 export default function ClaimPanel({ walletAddress }) {
   const [data, setData] = useState(null);
+  const [amountToClaim, setAmountToClaim] = useState('');
+  const [targetWallet, setTargetWallet] = useState(walletAddress);
 
   useEffect(() => {
     const loadData = async () => {
@@ -76,6 +79,29 @@ export default function ClaimPanel({ walletAddress }) {
             <p className="text-lg text-yellow-400 font-bold">{megy_amount} MEGY</p>
           </CardContent>
         </Card>
+      </div>
+
+      <div className="w-full max-w-xl mb-8 text-white text-sm space-y-6">
+        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
+          <label className="block mb-2 text-gray-300 font-medium">Amount to Claim:</label>
+          <input
+            type="number"
+            className="w-full p-3 rounded-md text-black bg-white"
+            placeholder="Enter MEGY amount"
+            value={amountToClaim}
+            onChange={(e) => setAmountToClaim(e.target.value)}
+          />
+        </div>
+        <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
+          <label className="block mb-2 text-gray-300 font-medium">Target Wallet (optional):</label>
+          <input
+            type="text"
+            className="w-full p-3 rounded-md text-black bg-white"
+            placeholder="Leave empty to use connected wallet"
+            value={targetWallet}
+            onChange={(e) => setTargetWallet(e.target.value)}
+          />
+        </div>
       </div>
 
       <Button
