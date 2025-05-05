@@ -11,26 +11,31 @@ export default function ClaimPanel({ walletAddress }) {
   const [claimOpen, setClaimOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Kullanıcı verisini çek
+  // Kullanıcı verisini Neon'dan çek
   useEffect(() => {
     const loadData = async () => {
+      if (!walletAddress) return;
+
       try {
-        const res = await fetch('/claimSnapshot.json');
+        const res = await fetch(`/api/claim/user?wallet=${walletAddress}`);
         const json = await res.json();
-        const userData = json.find((entry) => entry.wallet_address === walletAddress);
-        setData(userData);
-        if (userData?.claim_status === true) {
-          setClaimed(true);
+        if (json.success) {
+          setData(json.data);
+          if (json.data.claim_status === true) {
+            setClaimed(true);
+          }
+        } else {
+          setData(null);
         }
       } catch (err) {
-        console.error('Failed to load claim snapshot:', err);
+        console.error('Failed to load claim data:', err);
       }
     };
 
     loadData();
   }, [walletAddress]);
 
-  // Config.json'dan claim durumu çek
+  // Config dosyasından claim durumu çek
   useEffect(() => {
     const fetchClaimStatus = async () => {
       try {
@@ -46,7 +51,6 @@ export default function ClaimPanel({ walletAddress }) {
 
   const handleClaim = async () => {
     if (!data) return;
-
     setIsLoading(true);
 
     try {
@@ -57,7 +61,7 @@ export default function ClaimPanel({ walletAddress }) {
           fromWallet: walletAddress,
           toWallet: walletAddress,
           amount: data.megy_amount,
-          feeSignature: 'TX_PENDING', // Gerçek işlemden sonra güncellenebilir
+          feeSignature: 'TX_PENDING', // İleride güncellenebilir
           tokenTicker: '$MEGY',
           network: 'solana',
         }),

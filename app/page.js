@@ -4,8 +4,11 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import CountUp from 'react-countup';
 import CoincarneForm from '../components/CoincarneForm';
+import { useWallet } from '@solana/wallet-adapter-react'; // ✅ Ekle
 
 export default function Home() {
+  const { publicKey } = useWallet(); // ✅ Cüzdan adresi
+  const walletAddress = publicKey?.toBase58(); // ✅ String adres
   const [stats, setStats] = useState({
     participantCount: 0,
     totalUsdValue: 0,
@@ -16,7 +19,6 @@ export default function Home() {
   const [timeLeft, setTimeLeft] = useState({});
   const [hasCoincarneDone, setHasCoincarneDone] = useState(false);
 
-  // ✅ 1. Coincarne işlemi yapılmış mı kontrol et (localStorage)
   useEffect(() => {
     const done = localStorage.getItem('coincarneDone');
     if (done === 'true') {
@@ -24,7 +26,6 @@ export default function Home() {
     }
   }, []);
 
-  // ✅ 2. Katılımcı verilerini çek
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -41,7 +42,6 @@ export default function Home() {
     return () => clearInterval(interval);
   }, []);
 
-  // ✅ 3. Coincarnation kapanış tarihi (geri sayım)
   useEffect(() => {
     const fetchEndDate = async () => {
       try {
@@ -55,7 +55,6 @@ export default function Home() {
     fetchEndDate();
   }, []);
 
-  // ✅ 4. Geri sayımı güncelle
   useEffect(() => {
     if (!endDate) return;
 
@@ -102,17 +101,21 @@ export default function Home() {
         <CoincarneForm />
       </div>
 
-      {/* ✅ Sadece işlem yapan kullanıcıya gösterilen buton */}
-      {true && (
-        <div className="mt-8 flex justify-center">
-          <Link
-            href="/claim"
-            className="px-6 py-3 bg-green-500 hover:bg-green-600 text-black text-lg font-bold rounded-xl transition-all duration-300"
+      {/* ✅ Cüzdan bağlıysa aktif, değilse pasif */}
+      <div className="mt-8 flex justify-center">
+        <Link href={walletAddress ? '/claim' : '#'}>
+          <button
+            disabled={!walletAddress}
+            className={`px-6 py-3 text-lg font-bold rounded-xl transition-all duration-300 ${
+              walletAddress
+                ? 'bg-green-500 hover:bg-green-600 text-black'
+                : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+            }`}
           >
             🎯 Go to Profile
-          </Link>
-        </div>
-      )}
+          </button>
+        </Link>
+      </div>
 
       {/* ✅ Son Katılımcı */}
       {stats.latest && (
