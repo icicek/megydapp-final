@@ -118,23 +118,41 @@ export async function POST(req) {
       );
     }
 
-    // 💾 Neon veritabanına kaydet (ilk sefer için Coincarnator No ver)
-    await pool.query(
-      `INSERT INTO claim_snapshots (
-        wallet_address,
-        megy_amount,
-        claim_status,
-        coincarnator_no,
-        contribution_usd,
-        share_ratio
-      )
-      SELECT $1, 0, false,
-        CASE WHEN COUNT(*) = 0 THEN (SELECT COUNT(*) + 1 FROM claim_snapshots) ELSE NULL END,
-        $2, 0.0
-      FROM claim_snapshots
-      WHERE LOWER(wallet_address) = LOWER($1);`,
-      [wallet_address, amount]
+    // 💾 Neon veritabanı işlemleri
+    const alreadyExists = await pool.query(
+      `SELECT * FROM claim_snapshots WHERE LOWER(wallet_address) = LOWER($1) LIMIT 1;`,
+      [wallet_address]
     );
+
+    if (alreadyExists.rows.length === 0) {
+      // İlk kez katılıyor → Coincarnator No ver
+      await pool.query(
+        `INSERT INTO claim_snapshots (
+          wallet_address,
+          megy_amount,
+          claim_status,
+          coincarnator_no,
+          contribution_usd,
+          share_ratio
+        ) VALUES (
+          $1,
+          0,
+          false,
+          (SELECT COUNT(*) + 1 FROM claim_snapshots),
+          $2,
+          0.0
+        );`,
+        [wallet_address, amount]
+      );
+    } else {
+      // Daha önce katılmış → Sadece contribution_usd güncelle
+      await pool.query(
+        `UPDATE claim_snapshots
+         SET contribution_usd = contribution_usd + $2
+         WHERE LOWER(wallet_address) = LOWER($1);`,
+        [wallet_address, amount]
+      );
+    }
 
     return Response.json({
       message: '✅ Transaction prepared.',
