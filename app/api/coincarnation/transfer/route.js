@@ -1,6 +1,6 @@
+// ✅ File: app/api/coincarnation/transfer/route.js
 import { promises as fs } from 'fs';
 import path from 'path';
-import pool from '@/lib/db'; // ✅ NEON DB bağlantısı
 import {
   Connection,
   PublicKey,
@@ -13,14 +13,11 @@ import {
   getAccount,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
+import pool from '@/lib/db';
 
-// 🔗 Solana RPC bağlantısı
 const connection = new Connection("https://patient-dry-tab.solana-mainnet.quiknode.pro/28eced89e0df71d2d6ed0e0f8d7026e53ed9dd53/");
-
-// 🎯 Coincarnation hedef cüzdan
 const COINCARNATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd";
 
-// 🔒 Redlist ve Blacklist kontrol fonksiyonu
 async function checkRedAndBlackLists(tokenMint, tokenChain, userTimestampISO) {
   const redlistPath = path.join(process.cwd(), 'data', 'redlist_tokens.json');
   const blacklistPath = path.join(process.cwd(), 'data', 'blacklist_tokens.json');
@@ -61,7 +58,6 @@ async function checkRedAndBlackLists(tokenMint, tokenChain, userTimestampISO) {
 
 export async function POST(req) {
   try {
-    // ✅ Coincarnation açık mı?
     const configPath = path.join(process.cwd(), 'public', 'config.json');
     const configData = JSON.parse(await fs.readFile(configPath, 'utf-8'));
     if (!configData.coincarnation_active) {
@@ -72,22 +68,22 @@ export async function POST(req) {
     const { wallet_address, token_from, mint, amount, chain } = body;
     const timestamp = new Date().toISOString();
 
-    // ✅ Red/Blacklist kontrolü
     const check = await checkRedAndBlackLists(mint, chain, timestamp);
     if (check.status === 'blocked') {
       return Response.json({ message: `🚫 This token is on the ${check.list}.` }, { status: 403 });
     }
     if (check.status === 'invalidated') {
-      return Response.json({ message: `❌ Token invalid. Refund eligible.` }, { status: 200 });
+      return Response.json({ message: `❌ Token invalidated. Refund possible.` }, { status: 200 });
     }
 
-    // ✅ Transaction oluştur
     const senderPubkey = new PublicKey(wallet_address);
     const receiverPubkey = new PublicKey(COINCARNATION_WALLET);
     const transaction = new Transaction();
+
     transaction.recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     transaction.feePayer = senderPubkey;
 
+    let decimals = 9;
     if (mint === "SOL") {
       transaction.add(
         SystemProgram.transfer({
@@ -102,12 +98,12 @@ export async function POST(req) {
       const receiverTokenAccount = await getAssociatedTokenAddress(mintPubkey, receiverPubkey);
 
       const mintInfo = await connection.getParsedAccountInfo(mintPubkey);
-      const decimals = mintInfo.value?.data?.parsed?.info?.decimals || 6;
+      decimals = mintInfo.value?.data?.parsed?.info?.decimals || 6;
 
       try {
         await getAccount(connection, receiverTokenAccount);
       } catch {
-        return Response.json({ error: `❌ Receiver token account missing for ${token_from}` }, { status: 500 });
+        return Response.json({ error: `❌ Receiver token account does not exist.` }, { status: 500 });
       }
 
       transaction.add(
@@ -122,37 +118,18 @@ export async function POST(req) {
       );
     }
 
-    // ✅ NEON veritabanına kayıt
-    const client = await pool.connect();
-    try {
-      const result = await client.query(`SELECT MAX(coincarnator_no) AS max FROM claim_snapshots`);
-      const maxNo = result.rows[0].max || 0;
-      const newNo = maxNo + 1;
-
-      const megyAmount = Math.floor(amount * 100); // örnek: 100x
-      const contributionUsd = parseFloat((amount * 0.01).toFixed(2)); // örnek USD değeri
-      const shareRatio = parseFloat((contributionUsd / 1000 * 100).toFixed(2)); // % oran
-
-      await client.query(
-        `INSERT INTO claim_snapshots 
-          (wallet_address, megy_amount, claim_status, coincarnator_no, contribution_usd, share_ratio) 
-         VALUES ($1, $2, $3, $4, $5, $6)
-         ON CONFLICT (wallet_address) DO UPDATE 
-         SET megy_amount = EXCLUDED.megy_amount, 
-             contribution_usd = EXCLUDED.contribution_usd,
-             share_ratio = EXCLUDED.share_ratio`,
-        [
-          wallet_address,
-          megyAmount,
-          false,
-          newNo,
-          contributionUsd,
-          shareRatio
-        ]
-      );
-    } finally {
-      client.release();
-    }
+    // 💾 Neon veritabanına kaydet
+    await pool.query(
+      `INSERT INTO claim_snapshots (
+        wallet_address,
+        megy_amount,
+        claim_status,
+        coincarnator_no,
+        contribution_usd,
+        share_ratio
+      ) VALUES ($1, $2, false, (SELECT COUNT(*) + 1 FROM claim_snapshots), $3, 0.0)`,
+      [wallet_address, 0, amount]
+    );
 
     return Response.json({
       message: '✅ Transaction prepared.',
