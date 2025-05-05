@@ -4,38 +4,39 @@ import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
+import { Transaction } from '@solana/web3.js';
 
 export default function ClaimPanel({ walletAddress }) {
   const [data, setData] = useState(null);
   const [claimed, setClaimed] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const { sendTransaction, publicKey } = useWallet();
+  const { connection } = useConnection();
 
-  // Kullanıcı verisini Neon'dan çek
+  // Kullanıcı verisini çek
   useEffect(() => {
     const loadData = async () => {
-      if (!walletAddress) return;
-
       try {
-        const res = await fetch(`/api/claim/user?wallet=${walletAddress}`);
+        const res = await fetch('/api/claim-snapshot');
         const json = await res.json();
-        if (json.success) {
-          setData(json.data);
-          if (json.data.claim_status === true) {
-            setClaimed(true);
-          }
-        } else {
-          setData(null);
+        const userData = json.find((entry) =>
+          entry.wallet_address?.toLowerCase() === walletAddress?.toLowerCase()
+        );
+        setData(userData);
+        if (userData?.claim_status === true) {
+          setClaimed(true);
         }
       } catch (err) {
-        console.error('Failed to load claim data:', err);
+        console.error('Failed to load claim snapshot:', err);
       }
     };
 
     loadData();
   }, [walletAddress]);
 
-  // Config dosyasından claim durumu çek
+  // Config.json'dan claim durumu çek
   useEffect(() => {
     const fetchClaimStatus = async () => {
       try {
@@ -50,35 +51,53 @@ export default function ClaimPanel({ walletAddress }) {
   }, []);
 
   const handleClaim = async () => {
-    if (!data) return;
+    if (!data || !walletAddress) return;
     setIsLoading(true);
 
     try {
-      const res = await fetch('/api/claim', {
+      // 1. Claim işlemi için işlem hazırla
+      const feeRes = await fetch('/api/claim-fee', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ from: walletAddress }),
+      });
+
+      const feeJson = await feeRes.json();
+
+      if (!feeRes.ok || !feeJson.transaction) {
+        throw new Error(feeJson.error || 'Failed to prepare fee transaction.');
+      }
+
+      // 2. Cüzdandan 0.005 SOL çek
+      const transaction = Transaction.from(Buffer.from(feeJson.transaction, 'base64'));
+      const txSig = await sendTransaction(transaction, connection);
+      await connection.confirmTransaction(txSig, 'processed');
+
+      // 3. Claim verisini DB'ye kaydet
+      const claimRes = await fetch('/api/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          fromWallet: walletAddress,
-          toWallet: walletAddress,
+          wallet_address: walletAddress,
           amount: data.megy_amount,
-          feeSignature: 'TX_PENDING', // İleride güncellenebilir
-          tokenTicker: '$MEGY',
+          tx_hash: txSig,
+          destination_wallet: walletAddress,
+          token_ticker: '$MEGY',
           network: 'solana',
         }),
       });
 
-      const result = await res.json();
+      const result = await claimRes.json();
 
       if (result.success) {
         alert('✅ Claim successful!');
         setClaimed(true);
       } else {
-        console.error('Claim failed:', result.error);
-        alert(`❌ Claim failed: ${result.error}`);
+        throw new Error(result.error || 'Claim failed.');
       }
     } catch (err) {
       console.error('Claim error:', err);
-      alert('❌ An unexpected error occurred.');
+      alert(`❌ ${err.message || 'An unexpected error occurred.'}`);
     } finally {
       setIsLoading(false);
     }
@@ -162,7 +181,7 @@ export default function ClaimPanel({ walletAddress }) {
           />
         </div>
         <p className="text-yellow-400 text-sm pl-1">
-          ⚠️ You will be charged a 0.5 USD fee in SOL during claim.
+          ⚠️ You will be charged 0.005 SOL during claim.
         </p>
       </div>
 
