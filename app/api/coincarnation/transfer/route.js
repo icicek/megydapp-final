@@ -118,7 +118,7 @@ export async function POST(req) {
       );
     }
 
-    // 💾 Neon veritabanına kaydet
+    // 💾 Neon veritabanına kaydet (ilk sefer için Coincarnator No ver)
     await pool.query(
       `INSERT INTO claim_snapshots (
         wallet_address,
@@ -127,8 +127,13 @@ export async function POST(req) {
         coincarnator_no,
         contribution_usd,
         share_ratio
-      ) VALUES ($1, $2, false, (SELECT COUNT(*) + 1 FROM claim_snapshots), $3, 0.0)`,
-      [wallet_address, 0, amount]
+      )
+      SELECT $1, 0, false,
+        CASE WHEN COUNT(*) = 0 THEN (SELECT COUNT(*) + 1 FROM claim_snapshots) ELSE NULL END,
+        $2, 0.0
+      FROM claim_snapshots
+      WHERE LOWER(wallet_address) = LOWER($1);`,
+      [wallet_address, amount]
     );
 
     return Response.json({
