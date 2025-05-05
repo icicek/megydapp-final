@@ -1,54 +1,52 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import Link from 'next/link';
 
 export default function ClaimPanel({ walletAddress }) {
-  const [userData, setUserData] = useState(null);
+  const [data, setData] = useState(null);
   const [claimed, setClaimed] = useState(false);
   const [claimOpen, setClaimOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [globalStats, setGlobalStats] = useState(null);
 
-  // ✅ Kendi cüzdanına ait veriyi Neon'dan çek
+  // Kullanıcıya ait snapshot verisini getir
   useEffect(() => {
-    const loadUserData = async () => {
+    const loadData = async () => {
       if (!walletAddress) return;
       try {
         const res = await fetch(`/api/claim-snapshot?wallet=${walletAddress}`);
-        const json = await res.json();
-        if (json.success && json.data) {
-          setUserData(json.data);
-          if (json.data.claim_status) {
+        const result = await res.json();
+        if (result.success) {
+          setData(result.data);
+          if (result.data?.claim_status === true) {
             setClaimed(true);
           }
         }
       } catch (err) {
-        console.error('Failed to load user snapshot:', err);
+        console.error('Failed to load claim snapshot:', err);
       }
     };
-
-    loadUserData();
+    loadData();
   }, [walletAddress]);
 
-  // ✅ Claim açık mı?
+  // Claim işlemi açık mı?
   useEffect(() => {
-    const checkClaimStatus = async () => {
+    const fetchClaimStatus = async () => {
       try {
         const res = await fetch('/api/config');
-        const json = await res.json();
-        setClaimOpen(json.claim_open);
+        const config = await res.json();
+        setClaimOpen(config.claim_open);
       } catch (err) {
-        console.error('Failed to check claim status:', err);
+        console.error('Failed to fetch config:', err);
       }
     };
-
-    checkClaimStatus();
+    fetchClaimStatus();
   }, []);
 
-  // ✅ Global verileri getir (isteğe bağlı)
+  // Global istatistikleri al
   useEffect(() => {
     const fetchStats = async () => {
       try {
@@ -56,133 +54,154 @@ export default function ClaimPanel({ walletAddress }) {
         const json = await res.json();
         setGlobalStats(json);
       } catch (err) {
-        console.error('Failed to fetch stats:', err);
+        console.error('Failed to fetch global stats:', err);
       }
     };
-
     fetchStats();
   }, []);
 
-  // ✅ Claim işlemini gönder
   const handleClaim = async () => {
-    if (!userData || !walletAddress) return;
+    if (!data) return;
     setIsLoading(true);
-
     try {
       const res = await fetch('/api/claim', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           wallet_address: walletAddress,
-          amount: userData.megy_amount,
-          tx_hash: 'TX_PENDING',
           destination_wallet: walletAddress,
+          amount: data.megy_amount,
+          tx_hash: 'TX_PENDING',
           token_ticker: '$MEGY',
           network: 'solana',
         }),
       });
-
-      const json = await res.json();
-      if (json.success) {
+      const result = await res.json();
+      if (result.success) {
         alert('✅ Claim successful!');
         setClaimed(true);
       } else {
-        alert(`❌ Claim failed: ${json.error}`);
+        console.error('Claim failed:', result.error);
+        alert(`❌ Claim failed: ${result.error}`);
       }
     } catch (err) {
       console.error('Claim error:', err);
-      alert('❌ Claim failed.');
+      alert('❌ An unexpected error occurred.');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const {
+    coincarnator_no,
+    contribution_usd,
+    share_ratio,
+    megy_amount,
+  } = data || {};
+
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <h1 className="text-3xl font-bold text-center mb-6">🎯 Your MEGY Profile</h1>
+    <div className="min-h-screen flex flex-col items-center justify-start bg-gradient-to-br from-black via-gray-900 to-black p-8 text-white">
+      <h1 className="text-4xl font-bold mb-4 text-center">🎯 Your MEGY Profile</h1>
+      <p className="text-gray-400 text-center mb-10">
+        {claimOpen ? 'Claim is now available.' : 'This is a preview. Claims will be enabled by the team.'}
+      </p>
 
-      {!walletAddress && (
-        <p className="text-center text-gray-400">Please connect your wallet to view your profile.</p>
-      )}
+      <Card className="w-full max-w-2xl mb-6 bg-gray-800 border border-gray-700 shadow-md">
+        <CardContent className="p-6">
+          <p className="text-sm text-gray-400 mb-2">Connected Wallet</p>
+          <p className="text-lg break-all">{walletAddress}</p>
+        </CardContent>
+      </Card>
 
-      {walletAddress && (
+      {data ? (
         <>
-          {/* ✅ Kullanıcı yoksa: sadece global istatistik */}
-          {!userData && (
-            <div className="text-center">
-              <p className="mb-4 text-yellow-400 font-semibold">
-                You haven’t participated yet. Coincarnate to unlock your MEGY share.
-              </p>
-              {globalStats && (
-                <div className="space-y-2 text-sm text-gray-300">
-                  <p>🌐 Total revived: ${globalStats.totalUsdValue}</p>
-                  <p>👥 Total participants: {globalStats.participantCount}</p>
-                </div>
-              )}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl mb-10">
+            <Card className="bg-gray-800 border border-gray-700 shadow-md">
+              <CardContent className="p-6">
+                <p className="text-sm text-gray-400 mb-2">Coincarnator No</p>
+                <p className="text-lg text-white font-bold">#{coincarnator_no}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-gray-800 border border-gray-700 shadow-md">
+              <CardContent className="p-6">
+                <p className="text-sm text-gray-400 mb-2">Contribution (USD)</p>
+                <p className="text-lg text-green-400 font-bold">${contribution_usd}</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-gray-800 border border-gray-700 shadow-md">
+              <CardContent className="p-6">
+                <p className="text-sm text-gray-400 mb-2">Your Share</p>
+                <p className="text-lg text-blue-400 font-bold">{share_ratio}%</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-gray-800 border border-gray-700 shadow-md">
+              <CardContent className="p-6">
+                <p className="text-sm text-gray-400 mb-2">Available $MEGY</p>
+                <p className="text-lg text-yellow-400 font-bold">{megy_amount} MEGY</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="w-full max-w-xl mb-8 text-white text-sm space-y-6">
+            <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
+              <label className="block mb-2 text-gray-300 font-medium">Amount to Claim:</label>
+              <input
+                type="text"
+                className="w-full p-3 rounded-md text-black bg-white"
+                value={megy_amount}
+                readOnly
+              />
             </div>
-          )}
+            <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
+              <label className="block mb-2 text-gray-300 font-medium">Target Wallet:</label>
+              <input
+                type="text"
+                className="w-full p-3 rounded-md text-black bg-white"
+                value={walletAddress}
+                readOnly
+              />
+            </div>
+            <p className="text-yellow-400 text-sm pl-1">
+              ⚠️ You will be charged a 0.5 USD fee in SOL during claim.
+            </p>
+          </div>
 
-          {/* ✅ Katılmışsa */}
-          {userData && (
-            <>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto mt-8">
-                <Card className="bg-gray-800 border border-gray-700 shadow-md">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-gray-400 mb-2">Coincarnator No</p>
-                    <p className="text-lg font-bold">#{userData.coincarnator_no}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gray-800 border border-gray-700 shadow-md">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-gray-400 mb-2">Contribution (USD)</p>
-                    <p className="text-lg font-bold text-green-400">${userData.contribution_usd}</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gray-800 border border-gray-700 shadow-md">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-gray-400 mb-2">Your Share</p>
-                    <p className="text-lg font-bold text-blue-400">{userData.share_ratio}%</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-gray-800 border border-gray-700 shadow-md">
-                  <CardContent className="p-6">
-                    <p className="text-sm text-gray-400 mb-2">Available $MEGY</p>
-                    <p className="text-lg font-bold text-yellow-400">{userData.megy_amount} MEGY</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* ✅ Claim Button */}
-              <div className="text-center mt-10">
-                {!claimed ? (
-                  claimOpen ? (
-                    <Button
-                      onClick={handleClaim}
-                      disabled={isLoading}
-                      className="bg-green-500 hover:bg-green-600 text-black font-bold px-6 py-3 rounded-xl text-lg"
-                    >
-                      {isLoading ? '⏳ Claiming...' : '🚀 Claim Now'}
-                    </Button>
-                  ) : (
-                    <Button disabled className="bg-gray-600 text-white px-6 py-3 rounded-xl text-lg">
-                      🚫 Claim not open yet
-                    </Button>
-                  )
-                ) : (
-                  <Button disabled className="bg-gray-600 text-white px-6 py-3 rounded-xl text-lg">
-                    ✅ Already Claimed
-                  </Button>
-                )}
-              </div>
-            </>
+          {!claimed ? (
+            claimOpen ? (
+              <Button
+                onClick={handleClaim}
+                disabled={isLoading}
+                className="bg-green-500 hover:bg-green-600 text-black font-bold px-8 py-4 rounded-2xl text-xl"
+              >
+                {isLoading ? '⏳ Claiming...' : '🚀 Claim Now'}
+              </Button>
+            ) : (
+              <Button
+                disabled
+                className="bg-gray-600 text-white font-bold px-8 py-4 rounded-2xl text-xl cursor-not-allowed"
+              >
+                🚫 Claim Disabled
+              </Button>
+            )
+          ) : (
+            <Button
+              disabled
+              className="bg-gray-600 text-white font-bold px-8 py-4 rounded-2xl text-xl cursor-not-allowed"
+            >
+              ✅ Already Claimed
+            </Button>
           )}
         </>
+      ) : (
+        <div className="text-center text-gray-300 mt-20">
+          <p className="text-xl font-semibold">🕵️ You haven’t participated yet...</p>
+          <p className="mt-2 text-sm">Global participants: {globalStats?.totalWallets || 0} | Total Value: ${globalStats?.totalUSD || 0}</p>
+        </div>
       )}
 
-      {/* ✅ Back Link */}
       <div className="text-center mt-12">
         <Link href="/">
-          <Button className="bg-cyan-500 hover:bg-cyan-400 text-black px-5 py-2 rounded-xl font-semibold">
+          <Button className="bg-green-500 hover:bg-green-600 text-black font-bold px-6 py-3 rounded-xl text-lg">
             🔁 Back to Coincarnation
           </Button>
         </Link>

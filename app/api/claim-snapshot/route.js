@@ -11,7 +11,6 @@ export async function GET(req) {
       return NextResponse.json({ success: false, error: 'Wallet address missing.' }, { status: 400 });
     }
 
-    // En son snapshot'ı çek (id'ye göre ters sırala, sadece 1 tanesi alınsın)
     const { rows } = await pool.query(
       `SELECT * FROM claim_snapshots WHERE LOWER(wallet_address) = LOWER($1) ORDER BY id DESC LIMIT 1;`,
       [wallet]
