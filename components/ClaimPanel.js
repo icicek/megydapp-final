@@ -8,7 +8,8 @@ import Link from 'next/link';
 export default function ClaimPanel({ walletAddress }) {
   const [data, setData] = useState(null);
   const [claimed, setClaimed] = useState(false);
-  const [claimOpen, setClaimOpen] = useState(false); // ✅ Claim açık mı?
+  const [claimOpen, setClaimOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Kullanıcı verisini çek
   useEffect(() => {
@@ -42,6 +43,42 @@ export default function ClaimPanel({ walletAddress }) {
     };
     fetchClaimStatus();
   }, []);
+
+  const handleClaim = async () => {
+    if (!data) return;
+
+    setIsLoading(true);
+
+    try {
+      const res = await fetch('/api/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fromWallet: walletAddress,
+          toWallet: walletAddress,
+          amount: data.megy_amount,
+          feeSignature: 'TX_PENDING', // Gerçek işlemden sonra güncellenebilir
+          tokenTicker: '$MEGY',
+          network: 'solana',
+        }),
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        alert('✅ Claim successful!');
+        setClaimed(true);
+      } else {
+        console.error('Claim failed:', result.error);
+        alert(`❌ Claim failed: ${result.error}`);
+      }
+    } catch (err) {
+      console.error('Claim error:', err);
+      alert('❌ An unexpected error occurred.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   if (!data) {
     return (
@@ -128,13 +165,11 @@ export default function ClaimPanel({ walletAddress }) {
       {!claimed ? (
         claimOpen ? (
           <Button
-            onClick={() => {
-              alert('✅ Simulated claim completed.');
-              setClaimed(true);
-            }}
+            onClick={handleClaim}
+            disabled={isLoading}
             className="bg-green-500 hover:bg-green-600 text-black font-bold px-8 py-4 rounded-2xl text-xl"
           >
-            🚀 Claim Now
+            {isLoading ? '⏳ Claiming...' : '🚀 Claim Now'}
           </Button>
         ) : (
           <Button

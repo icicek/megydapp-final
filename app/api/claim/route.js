@@ -1,36 +1,42 @@
+// ✅ File: app/api/claim/route.js
+import pool from '@/lib/db';
+import { NextResponse } from 'next/server';
+
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { fromWallet, toWallet, amount, feeSignature } = body;
+    const {
+      wallet_address,
+      amount,
+      tx_hash,
+      destination_wallet,
+      token_ticker,
+      network,
+    } = body;
 
-    console.log('✅ Received claim payload:', body);
-
-    if (!fromWallet || !toWallet || !amount || !feeSignature) {
-      console.log('❌ Missing required fields');
-      return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 });
+    if (!wallet_address || !amount || !destination_wallet) {
+      return NextResponse.json({ success: false, error: 'Missing required fields.' }, { status: 400 });
     }
 
-    const { error } = await supabase.from('claims').insert([
-      {
-        from_wallet: fromWallet,
-        to_wallet: toWallet,
-        amount: amount,
-        fee_signature: feeSignature,
-        claimed_at: new Date().toISOString(),
-      },
-    ]);
+    const result = await pool.query(
+      `
+      INSERT INTO claims (
+        wallet_address,
+        amount,
+        tx_hash,
+        destination_wallet,
+        token_ticker,
+        network,
+        status
+      ) VALUES ($1, $2, $3, $4, $5, $6, 'claimed')
+      RETURNING *;
+      `,
+      [wallet_address, amount, tx_hash, destination_wallet, token_ticker, network]
+    );
 
-    if (error) {
-      console.error('❌ Supabase insert error:', error);
-      return NextResponse.json({ error: error.message || 'Failed to save claim record.' }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, tx: 'MEGY_TRANSFER_TX_PENDING' });
-  } catch (err) {
-    console.error('❌ Claim API error:', err);
-    return new Response(`Internal Server Error: ${err.message}`, {
-      status: 500,
-    });
+    return NextResponse.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error('Error in /api/claim:', error);
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
-    
 }
