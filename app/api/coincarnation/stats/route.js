@@ -5,24 +5,22 @@ import { NextResponse } from 'next/server';
 export async function GET() {
   try {
     const { rows: countRows } = await pool.query(
-      `SELECT COUNT(*) AS total_participants, SUM(contribution_usd) AS total_usd FROM claim_snapshots;`
+      `SELECT COUNT(DISTINCT wallet_address) AS total_participants FROM participants;`
     );
 
-    const { rows: latestRows } = await pool.query(
-      `SELECT wallet_address, token_from FROM claim_snapshots ORDER BY created_at DESC LIMIT 1;`
+    const { rows: totalRows } = await pool.query(
+      `SELECT SUM(usd_value) AS total_usd FROM contributions;`
     );
 
-    const participantCount = parseInt(countRows[0].total_participants || 0);
-    const totalUsdValue = parseFloat(countRows[0].total_usd || 0).toFixed(2);
-    const latest = latestRows[0] || null;
+    const participantCount = parseInt(countRows[0]?.total_participants || 0);
+    const totalUsdValue = parseFloat(totalRows[0]?.total_usd || 0).toFixed(2);
 
     return NextResponse.json({
-      participantCount,
-      totalUsdValue,
-      latest,
+      totalWallets: participantCount,
+      totalUSD: parseFloat(totalUsdValue),
     });
   } catch (err) {
     console.error('[Stats API Error]', err);
-    return new Response('Failed to fetch stats', { status: 500 });
+    return NextResponse.json({ error: 'Failed to fetch stats' }, { status: 500 });
   }
 }

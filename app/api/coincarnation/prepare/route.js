@@ -1,4 +1,4 @@
-// ✅ File: app/api/coincarnation/transfer/route.js
+// ✅ File: app/api/coincarnation/prepare/route.js
 import { promises as fs } from 'fs';
 import path from 'path';
 import {
@@ -13,7 +13,6 @@ import {
   getAccount,
   TOKEN_PROGRAM_ID,
 } from '@solana/spl-token';
-import pool from '@/lib/db';
 
 const connection = new Connection("https://patient-dry-tab.solana-mainnet.quiknode.pro/28eced89e0df71d2d6ed0e0f8d7026e53ed9dd53/");
 const COINCARNATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd";
@@ -65,9 +64,8 @@ export async function POST(req) {
     }
 
     const body = await req.json();
-    const { wallet_address, token_from, mint, amount, chain, usd_value, referral_code } = body;
+    const { wallet_address, token_from, mint, amount, chain } = body;
     const timestamp = new Date().toISOString();
-    const userAgent = req.headers.get('user-agent') || null;
 
     const check = await checkRedAndBlackLists(mint, chain, timestamp);
     if (check.status === 'blocked') {
@@ -119,36 +117,10 @@ export async function POST(req) {
       );
     }
 
-    // 💾 İlk katılım kontrolü → participants tablosu
-    const existing = await pool.query(
-      `SELECT * FROM participants WHERE LOWER(wallet_address) = LOWER($1) LIMIT 1;`,
-      [wallet_address]
-    );
-
-    if (existing.rows.length === 0) {
-      await pool.query(
-        `INSERT INTO participants (
-          wallet_address, token_symbol, token_contract, network,
-          token_amount, usd_value, transaction_signature, referral_code,
-          user_agent, timestamp
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW());`,
-        [wallet_address, token_from, mint, chain, amount, usd_value || amount, "", referral_code || null, userAgent]
-      );
-    }
-
-    // 🧾 Her işlem → contributions tablosuna yaz
-    await pool.query(
-      `INSERT INTO contributions (
-        wallet_address, token_symbol, token_contract, network,
-        token_amount, usd_value, transaction_signature, referral_code,
-        user_agent, timestamp
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW());`,
-      [wallet_address, token_from, mint, chain, amount, usd_value || amount, "", referral_code || null, userAgent]
-    );
-
     return Response.json({
       message: '✅ Transaction prepared.',
-      transaction: transaction.serialize({ requireAllSignatures: false }).toString("base64")
+      transaction: transaction.serialize({ requireAllSignatures: false }).toString("base64"),
+      timestamp
     });
 
   } catch (err) {

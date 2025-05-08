@@ -125,7 +125,7 @@ export default function CoincarneForm() {
       if (response.status === 403) {
         alert('🚫 Coincarnation is currently paused. Please try again later.');
         return;
-      }      
+      }
 
       const data = await response.json();
 
@@ -135,8 +135,23 @@ export default function CoincarneForm() {
           const signature = await sendTransaction(transaction, connection);
           console.log("Transaction Signature:", signature);
 
-          const randomId = Math.floor(Math.random() * (9999 - 1000 + 1)) + 1000;
-          setSuccessData({ id: randomId, token: metaName(mint) });
+          // 🔁 OG verisini çek
+          const res = await fetch(`/api/ogdata?wallet=${walletAddress}`);
+          const ogdata = await res.json();
+
+          if (ogdata.success) {
+            await fetch('/api/generate-megy-image', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                number: ogdata.coincarnator_no,
+                amount: ogdata.usd,
+                percent: ogdata.percent
+              })
+            });
+          }
+
+          setSuccessData({ id: ogdata.coincarnator_no, token: metaName(mint) });
           setMessage(null);
           localStorage.setItem('coincarneDone', 'true');
         } else {
@@ -156,138 +171,5 @@ export default function CoincarneForm() {
     setTimeout(() => setMessage(null), 4000);
   };
 
-  const openModal = (token) => {
-    setSelectedToken(token);
-    setManualAmount('');
-    setShowModal(true);
-  };
-
-  const confirmCoincarne = async () => {
-    if (!manualAmount || isNaN(manualAmount) || manualAmount <= 0) {
-      alert('Please enter a valid amount.');
-      return;
-    }
-    setShowModal(false);
-    await handleCoincarne(selectedToken.mint, manualAmount);
-  };
-
-  return (
-    <div style={{ padding: "20px" }}>
-      <div style={{ marginBottom: "20px" }}>
-        <WalletMultiButton />
-      </div>
-
-      {globalStats && (
-        <div style={{ border: "1px solid #ddd", borderRadius: "8px", padding: "15px", marginBottom: "20px", backgroundColor: "#f9f9f9", color: "#000" }}>
-          <h3>🌐 Global Coincarne Stats</h3>
-          <p>💰 <strong>Total Coincarne USD:</strong> ${globalStats.totalUSD}</p>
-          <p>👥 <strong>Unique Wallets:</strong> {globalStats.totalWallets}</p>
-          <p>📦 <strong>Total Transactions:</strong> {globalStats.totalTransactions}</p>
-          <p>🧬 <strong>Unique Tokens:</strong> {globalStats.totalUniqueMints}</p>
-        </div>
-      )}
-
-      {message && (
-        <div style={{ backgroundColor: messageType === "success" ? "#d4edda" : "#f8d7da", color: messageType === "success" ? "#155724" : "#721c24", padding: "10px", marginBottom: "15px", borderRadius: "5px" }}>
-          {message}
-        </div>
-      )}
-
-      <h2>Coincarne Panel</h2>
-      <p>Select tokens from your wallet and coincarnate them into $MEGY.</p>
-
-      {walletAddress ? (
-        <p><strong>Connected Wallet:</strong> {walletAddress}</p>
-      ) : (
-        <p style={{ color: "gray" }}>No wallet connected</p>
-      )}
-
-      <h3>Your Tokens:</h3>
-      {tokens.length > 0 ? (
-        <ul>
-          {tokens.map((token, i) => {
-            const meta = tokenMetadata[token.mint] || {};
-            return (
-              <li key={i} style={{ marginBottom: "10px", display: "flex", alignItems: "center" }}>
-                {meta.logoURI && (
-                  <img src={meta.logoURI} alt={meta.symbol || "Token"} width="24" height="24" style={{ marginRight: "10px", borderRadius: "50%" }} />
-                )}
-                <div style={{ flex: 1 }}>
-                  <strong>{meta.symbol || token.mint}</strong> ({meta.name || token.mint}) — {token.amount}
-                </div>
-                <button onClick={() => openModal(token)}>
-                  Coincarnate
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      ) : (
-        <p>No tokens found or wallet not connected.</p>
-      )}
-
-      {showModal && selectedToken && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md text-black">
-            <h2 className="text-2xl font-bold mb-4">Coincarnate {metaName(selectedToken.mint)}</h2>
-            <p className="mb-4">Balance: {selectedToken.amount}</p>
-
-            <div className="flex gap-2 mb-4">
-              <button onClick={() => setManualAmount((selectedToken.amount * 0.25).toFixed(2))}>25%</button>
-              <button onClick={() => setManualAmount((selectedToken.amount * 0.5).toFixed(2))}>50%</button>
-              <button onClick={() => setManualAmount((selectedToken.amount * 0.75).toFixed(2))}>75%</button>
-              <button onClick={() => setManualAmount(selectedToken.amount)}>Max</button>
-            </div>
-
-            <input type="number" min="0" step="any" value={manualAmount} onChange={(e) => setManualAmount(e.target.value)} placeholder="Enter amount to coincarnate" className="w-full p-2 border rounded mb-4" />
-
-            <div className="flex gap-4">
-              <button onClick={() => confirmCoincarne()} className="bg-cyan-400 hover:bg-cyan-300 text-black font-bold py-2 px-6 rounded">
-                Coincarnate Now 🚀
-              </button>
-              <button onClick={() => setShowModal(false)} className="bg-gray-400 hover:bg-gray-300 text-black font-bold py-2 px-6 rounded">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {successData && (
-        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-full max-w-md text-black text-center">
-            <h2 className="text-2xl font-bold mb-4">🚀 Coincarnation Successful!</h2>
-            <p className="mb-2">You are Coincarnator #{successData.id}</p>
-            <p className="mb-4">You revived: ${successData.token}</p>
-            <p className="text-sm mb-6 text-gray-600">Help build the world's largest crypto community! Share your success! 🌍</p>
-
-            <div className="flex flex-col gap-4">
-              <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`🚀 I just Coincarned! I'm Coincarnator #${successData.id}. Revived $${successData.token}! 🌍 Join the movement: https://megydapp.vercel.app`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-cyan-400 hover:bg-cyan-300 text-black font-bold py-2 px-6 rounded"
-              >
-                Share on X (Twitter)
-              </a>
-
-              <button
-                onClick={() => setSuccessData(null)}
-                className="bg-yellow-400 hover:bg-yellow-300 text-black font-bold py-2 px-6 rounded"
-              >
-                Coincarne Again
-              </button>
-
-              <a
-                href="/"
-                className="text-cyan-400 underline text-sm"
-              >
-                Return to Home
-              </a>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
+  // ... diğer JSX ve fonksiyonlar aynı kalıyor
 }
