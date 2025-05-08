@@ -65,8 +65,9 @@ export async function POST(req) {
     }
 
     const body = await req.json();
-    const { wallet_address, token_from, mint, amount, chain } = body;
+    const { wallet_address, token_from, mint, amount, chain, usd_value, referral_code } = body;
     const timestamp = new Date().toISOString();
+    const userAgent = req.headers.get('user-agent') || null;
 
     const check = await checkRedAndBlackLists(mint, chain, timestamp);
     if (check.status === 'blocked') {
@@ -118,41 +119,32 @@ export async function POST(req) {
       );
     }
 
-    // 💾 Neon veritabanı işlemleri
-    const alreadyExists = await pool.query(
-      `SELECT * FROM claim_snapshots WHERE LOWER(wallet_address) = LOWER($1) LIMIT 1;`,
+    // 💾 İlk katılım kontrolü → participants tablosu
+    const existing = await pool.query(
+      `SELECT * FROM participants WHERE LOWER(wallet_address) = LOWER($1) LIMIT 1;`,
       [wallet_address]
     );
 
-    if (alreadyExists.rows.length === 0) {
-      // İlk kez katılıyor → Coincarnator No ver
+    if (existing.rows.length === 0) {
       await pool.query(
-        `INSERT INTO claim_snapshots (
-          wallet_address,
-          megy_amount,
-          claim_status,
-          coincarnator_no,
-          contribution_usd,
-          share_ratio
-        ) VALUES (
-          $1,
-          0,
-          false,
-          (SELECT COUNT(*) + 1 FROM claim_snapshots),
-          $2,
-          0.0
-        );`,
-        [wallet_address, amount]
-      );
-    } else {
-      // Daha önce katılmış → Sadece contribution_usd güncelle
-      await pool.query(
-        `UPDATE claim_snapshots
-         SET contribution_usd = contribution_usd + $2
-         WHERE LOWER(wallet_address) = LOWER($1);`,
-        [wallet_address, amount]
+        `INSERT INTO participants (
+          wallet_address, token_symbol, token_contract, network,
+          token_amount, usd_value, transaction_signature, referral_code,
+          user_agent, timestamp
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW());`,
+        [wallet_address, token_from, mint, chain, amount, usd_value || amount, "", referral_code || null, userAgent]
       );
     }
+
+    // 🧾 Her işlem → contributions tablosuna yaz
+    await pool.query(
+      `INSERT INTO contributions (
+        wallet_address, token_symbol, token_contract, network,
+        token_amount, usd_value, transaction_signature, referral_code,
+        user_agent, timestamp
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW());`,
+      [wallet_address, token_from, mint, chain, amount, usd_value || amount, "", referral_code || null, userAgent]
+    );
 
     return Response.json({
       message: '✅ Transaction prepared.',
