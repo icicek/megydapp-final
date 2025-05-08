@@ -140,15 +140,15 @@ export default function CoincarneForm() {
           const ogdata = await res.json();
 
           if (ogdata.success) {
-            await fetch('/api/generate-megy-image', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                number: ogdata.coincarnator_no,
-                amount: ogdata.usd,
-                percent: ogdata.percent
-              })
-            });
+          //  await fetch('/api/generate-megy-image', {
+          //    method: 'POST',
+          //    headers: { 'Content-Type': 'application/json' },
+          //    body: JSON.stringify({
+          //      number: ogdata.coincarnator_no,
+          //      amount: ogdata.usd,
+          //      percent: ogdata.percent
+          //    })
+          //  });
           }
 
           setSuccessData({ id: ogdata.coincarnator_no, token: metaName(mint) });
