@@ -84,11 +84,11 @@ export default function Home() {
           <div className="text-sm text-gray-400 mb-1 text-left">You give</div>
           <button
             onClick={() => setVisible(true)}
-            className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 hover:bg-gray-700 text-white border border-red-500 rounded-lg transition flex items-center justify-between"
-          >
+            className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-red-500 rounded-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:brightness-110 flex items-center justify-between"
+            >
             <span>Walking Deadcoins</span>
             <span className="text-sm text-gray-400 ml-2">(Memecoins, shitcoins...)</span>
-          </button>
+            </button>
 
           {/* Coincarnate arrow */}
           <div className="flex items-center justify-center my-4 space-x-2">
@@ -98,9 +98,9 @@ export default function Home() {
 
           {/* You receive */}
           <div className="text-sm text-gray-400 mb-1 text-left">You receive</div>
-          <div className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-green-500 rounded-lg flex items-center justify-between">
-            <span>MEGY</span>
-            <span className="text-sm text-gray-400 ml-2">(Future of Money)</span>
+          <div className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-green-500 rounded-lg flex items-center justify-between transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:brightness-110">
+          <span>MEGY</span>
+          <span className="text-sm text-gray-400 ml-2">(Future of Money)</span>
           </div>
         </div>
       </div>
