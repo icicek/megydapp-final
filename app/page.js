@@ -78,24 +78,30 @@ export default function Home() {
       </div>
 
       {/* Swap UI */}
-      <div className="mt-10 text-center w-full max-w-xl mx-auto px-4 animate-fade-in">
-        <div className="bg-gray-900 border border-gray-700 rounded-xl p-6 shadow-md">
-          <div className="text-sm text-gray-400 mb-1">You give</div>
+      <div className="mt-10 w-full max-w-xl mx-auto px-4 animate-fade-in">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-6 shadow-xl">
+          {/* You give */}
+          <div className="text-sm text-gray-400 mb-1 text-left">You give</div>
           <button
             onClick={() => setVisible(true)}
-            className="w-full py-3 text-xl font-bold bg-red-600 hover:bg-red-700 text-white rounded-md mb-2 transition"
+            className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 hover:bg-gray-700 text-white border border-red-500 rounded-lg transition flex items-center justify-between"
           >
-            Walking Deadcoins
+            <span>Walking Deadcoins</span>
+            <span className="text-sm text-gray-400 ml-2">(Memecoins, shitcoins...)</span>
           </button>
-          <div className="text-xs text-gray-500 mb-4">(Memecoins, shitcoins...)</div>
 
-          <div className="text-3xl my-2">🔁</div>
-
-          <div className="text-sm text-gray-400 mb-1">You receive</div>
-          <div className="w-full py-3 text-xl font-bold bg-green-500 text-black rounded-md mb-2">
-            MEGY
+          {/* Coincarnate arrow */}
+          <div className="flex items-center justify-center my-4 space-x-2">
+            <span className="text-3xl">🔁</span>
+            <span className="text-lg font-semibold text-gray-300">Coincarnate</span>
           </div>
-          <div className="text-xs text-gray-500">(Future of Money)</div>
+
+          {/* You receive */}
+          <div className="text-sm text-gray-400 mb-1 text-left">You receive</div>
+          <div className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-green-500 rounded-lg flex items-center justify-between">
+            <span>MEGY</span>
+            <span className="text-sm text-gray-400 ml-2">(Future of Money)</span>
+          </div>
         </div>
       </div>
 
