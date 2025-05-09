@@ -20,6 +20,7 @@ export default function CoincarneForm() {
   const [messageType, setMessageType] = useState("success");
   const [globalStats, setGlobalStats] = useState(null);
   const [selectedToken, setSelectedToken] = useState(null);
+  const [manualAmount, setManualAmount] = useState('');
   const [successData, setSuccessData] = useState(null);
 
   useEffect(() => {
@@ -171,6 +172,7 @@ export default function CoincarneForm() {
             const mint = e.target.value;
             const token = tokens.find(t => t.mint === mint);
             setSelectedToken(token);
+            setManualAmount('');
           }}
           className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-red-500 rounded-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:brightness-110"
           value={selectedToken?.mint || ''}
@@ -185,18 +187,52 @@ export default function CoincarneForm() {
         <div className="text-sm text-gray-400 mt-1">(Only revivable deadcoins appear)</div>
       </div>
 
-      <button
-        onClick={() => {
-          if (!selectedToken) {
-            alert("Please select a token.");
-            return;
-          }
-          handleCoincarne(selectedToken.mint, selectedToken.amount);
-        }}
-        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition"
-      >
-        Coincarnate Now
-      </button>
+      {selectedToken && (
+        <div className="mt-6 space-y-4 text-left">
+          <p className="text-sm text-gray-300">
+            Balance: <span className="font-mono">{selectedToken.amount.toFixed(4)} {metaName(selectedToken.mint)}</span>
+          </p>
+
+          <div className="flex space-x-2">
+            {[25, 50, 100].map((pct) => (
+              <button
+                key={pct}
+                onClick={() =>
+                  setManualAmount(
+                    ((selectedToken.amount * pct) / 100).toFixed(4)
+                  )
+                }
+                className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white"
+              >
+                %{pct}
+              </button>
+            ))}
+          </div>
+
+          <input
+            type="number"
+            min="0"
+            step="any"
+            placeholder="Enter amount to Coincarne"
+            value={manualAmount}
+            onChange={(e) => setManualAmount(e.target.value)}
+            className="w-full mt-2 p-3 bg-gray-800 border border-gray-600 rounded text-white text-lg"
+          />
+
+          <button
+            onClick={() => {
+              if (!manualAmount || isNaN(manualAmount) || parseFloat(manualAmount) <= 0) {
+                alert("Please enter a valid amount.");
+                return;
+              }
+              handleCoincarne(selectedToken.mint, parseFloat(manualAmount));
+            }}
+            className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition"
+          >
+            Coincarnate {manualAmount} {metaName(selectedToken.mint)}
+          </button>
+        </div>
+      )}
 
       {message && (
         <div className={`mt-4 text-sm ${messageType === "error" ? "text-red-400" : "text-green-400"}`}>
