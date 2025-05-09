@@ -6,7 +6,10 @@ import CountUp from 'react-countup';
 import CoincarneForm from '../components/CoincarneForm';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import Lottie from 'lottie-react';
+import dynamic from 'next/dynamic';
+
+// ✅ Lottie animasyonu sadece client'ta render edilsin
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 export default function Home() {
   const { publicKey } = useWallet();
