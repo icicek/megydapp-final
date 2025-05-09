@@ -6,7 +6,6 @@ import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Connection, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
-// ✅ QuickNode bağlantısı
 const rpcConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
 
 const TOKEN_LIST_URL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
@@ -21,8 +20,6 @@ export default function CoincarneForm() {
   const [messageType, setMessageType] = useState("success");
   const [globalStats, setGlobalStats] = useState(null);
   const [selectedToken, setSelectedToken] = useState(null);
-  const [manualAmount, setManualAmount] = useState('');
-  const [showModal, setShowModal] = useState(false);
   const [successData, setSuccessData] = useState(null);
 
   useEffect(() => {
@@ -66,7 +63,9 @@ export default function CoincarneForm() {
 
   const fetchTokens = async (walletPubkey) => {
     try {
-      const tokenAccounts = await rpcConnection.getParsedTokenAccountsByOwner(walletPubkey, { programId: TOKEN_PROGRAM_ID });
+      const tokenAccounts = await rpcConnection.getParsedTokenAccountsByOwner(walletPubkey, {
+        programId: TOKEN_PROGRAM_ID,
+      });
       const filteredTokens = tokenAccounts.value
         .map((account) => {
           const info = account.account.data.parsed.info;
@@ -135,20 +134,11 @@ export default function CoincarneForm() {
           const signature = await sendTransaction(transaction, connection);
           console.log("Transaction Signature:", signature);
 
-          // 🔁 OG verisini çek
           const res = await fetch(`/api/ogdata?wallet=${walletAddress}`);
           const ogdata = await res.json();
 
           if (ogdata.success) {
-          //  await fetch('/api/generate-megy-image', {
-          //    method: 'POST',
-          //    headers: { 'Content-Type': 'application/json' },
-          //    body: JSON.stringify({
-          //      number: ogdata.coincarnator_no,
-          //      amount: ogdata.usd,
-          //      percent: ogdata.percent
-          //    })
-          //  });
+            // await fetch('/api/generate-megy-image', { ... });
           }
 
           setSuccessData({ id: ogdata.coincarnator_no, token: metaName(mint) });
@@ -171,5 +161,48 @@ export default function CoincarneForm() {
     setTimeout(() => setMessage(null), 4000);
   };
 
-  // ... diğer JSX ve fonksiyonlar aynı kalıyor
+  return (
+    <div className="text-white mt-4 space-y-6 text-center">
+      <div>
+        <label className="block text-sm mb-1 text-left">Choose a token to Coincarne:</label>
+        <select
+          onClick={() => setVisible(true)}
+          onChange={(e) => {
+            const mint = e.target.value;
+            const token = tokens.find(t => t.mint === mint);
+            setSelectedToken(token);
+          }}
+          className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-red-500 rounded-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:brightness-110"
+          value={selectedToken?.mint || ''}
+        >
+          <option value="" disabled>Select a token</option>
+          {tokens.map(token => (
+            <option key={token.mint} value={token.mint}>
+              {metaName(token.mint)} — {token.amount.toFixed(4)}
+            </option>
+          ))}
+        </select>
+        <div className="text-sm text-gray-400 mt-1">(Only revivable deadcoins appear)</div>
+      </div>
+
+      <button
+        onClick={() => {
+          if (!selectedToken) {
+            alert("Please select a token.");
+            return;
+          }
+          handleCoincarne(selectedToken.mint, selectedToken.amount);
+        }}
+        className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition"
+      >
+        Coincarnate Now
+      </button>
+
+      {message && (
+        <div className={`mt-4 text-sm ${messageType === "error" ? "text-red-400" : "text-green-400"}`}>
+          {message}
+        </div>
+      )}
+    </div>
+  );
 }
