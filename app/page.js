@@ -7,7 +7,6 @@ import CoincarneForm from '../components/CoincarneForm';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import Lottie from 'lottie-react';
-import swapAnimation from '../public/animations/looping-swap.json';
 
 export default function Home() {
   const { publicKey } = useWallet();
@@ -17,6 +16,14 @@ export default function Home() {
   const [endDate, setEndDate] = useState(null);
   const [timeLeft, setTimeLeft] = useState({});
   const [hasCoincarneDone, setHasCoincarneDone] = useState(false);
+  const [swapAnimationData, setSwapAnimationData] = useState(null);
+
+  useEffect(() => {
+    fetch('/animations/looping-swap.json')
+      .then(res => res.json())
+      .then(data => setSwapAnimationData(data))
+      .catch(err => console.error("Lottie animation fetch error:", err));
+  }, []);
 
   useEffect(() => {
     const done = localStorage.getItem('coincarneDone');
@@ -97,12 +104,14 @@ export default function Home() {
 
           {/* Swap Animation */}
           <div className="flex items-center justify-center my-4">
-            <Lottie
-              animationData={swapAnimation}
-              loop
-              autoplay
-              style={{ width: 80, height: 80 }}
-            />
+            {swapAnimationData && (
+              <Lottie
+                animationData={swapAnimationData}
+                loop
+                autoplay
+                style={{ width: 80, height: 80 }}
+              />
+            )}
           </div>
 
           {/* You receive */}
