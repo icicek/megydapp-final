@@ -1,5 +1,6 @@
 'use client';
 
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import CountUp from 'react-countup';
@@ -99,6 +100,10 @@ export default function Home() {
           💸 $<CountUp key={stats.totalUSD} end={stats.totalUSD} duration={1.5} decimals={2} />
           {' '}worth of deadcoins revived.
         </p>
+      </div>
+
+      <div className="mt-6">
+        <WalletMultiButton className="!bg-white !text-black !font-bold !rounded-lg !px-6 !py-3" />
       </div>
 
       {/* ✅ Coincarne Form */}
