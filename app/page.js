@@ -4,14 +4,15 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import CountUp from 'react-countup';
 import CoincarneForm from '../components/CoincarneForm';
-import { useWallet } from '@solana/wallet-adapter-react'; // ✅ Ekle
+import { useWallet } from '@solana/wallet-adapter-react';
 
 export default function Home() {
-  const { publicKey } = useWallet(); // ✅ Cüzdan adresi
-  const walletAddress = publicKey?.toBase58(); // ✅ String adres
+  const { publicKey } = useWallet();
+  const walletAddress = publicKey?.toBase58();
+
   const [stats, setStats] = useState({
-    participantCount: 0,
-    totalUsdValue: 0,
+    totalWallets: 0,
+    totalUSD: 0,
     latest: null
   });
 
@@ -31,7 +32,11 @@ export default function Home() {
       try {
         const res = await fetch('/api/coincarnation/stats');
         const data = await res.json();
-        setStats(data);
+        setStats({
+          totalWallets: data.totalWallets,
+          totalUSD: data.totalUSD,
+          latest: data.latest || null
+        });
       } catch (err) {
         console.error('Stats fetch failed', err);
       }
@@ -87,21 +92,21 @@ export default function Home() {
 
       <div className="text-lg font-medium mt-4 space-y-2">
         <p>
-          🎉 <CountUp key={stats.participantCount} end={stats.participantCount} duration={1.5} />
+          🎉 <CountUp key={stats.totalWallets} end={stats.totalWallets} duration={1.5} />
           {' '}Coincarnators and counting...
         </p>
         <p>
-          💸 $<CountUp key={stats.totalUsdValue} end={stats.totalUsdValue} duration={1.5} decimals={2} />
+          💸 $<CountUp key={stats.totalUSD} end={stats.totalUSD} duration={1.5} decimals={2} />
           {' '}worth of deadcoins revived.
         </p>
       </div>
 
-      {/* ✅ Coincarne Formu */}
+      {/* ✅ Coincarne Form */}
       <div className="mt-10 w-full max-w-2xl">
         <CoincarneForm />
       </div>
 
-      {/* ✅ Cüzdan bağlıysa aktif, değilse pasif */}
+      {/* ✅ Go to Profile Button */}
       <div className="mt-8 flex justify-center">
         <Link href={walletAddress ? '/claim' : '#'}>
           <button
@@ -117,14 +122,14 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* ✅ Son Katılımcı */}
+      {/* ✅ Latest Participant */}
       {stats.latest && (
         <div className="mt-6 text-sm text-gray-300">
           🧑‍🚀 Latest: <span className="font-mono">{stats.latest.wallet}</span> revived <span className="font-bold">{stats.latest.token}</span>
         </div>
       )}
 
-      {/* ✅ Geri sayım */}
+      {/* ✅ Countdown Timer */}
       {!timeLeft.expired && endDate && (
         <div className="mt-4 text-sm text-yellow-400">
           ⏳ {timeLeft.days} days {timeLeft.hours}:{timeLeft.minutes?.toString().padStart(2, '0')}:{timeLeft.seconds?.toString().padStart(2, '0')} remaining...
