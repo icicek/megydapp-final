@@ -21,7 +21,7 @@ export default function CoincarneForm() {
   const [globalStats, setGlobalStats] = useState(null);
   const [selectedToken, setSelectedToken] = useState(null);
   const [manualAmount, setManualAmount] = useState('');
-  const [successData, setSuccessData] = useState(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetchTokenList();
@@ -56,7 +56,6 @@ export default function CoincarneForm() {
         name: 'Solana',
         logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png',
       };
-      console.log("✅ Token metadata loaded:", metadataMap);
       setTokenMetadata(metadataMap);
     } catch (err) {
       console.error("Token metadata fetch error:", err);
@@ -113,6 +112,11 @@ export default function CoincarneForm() {
     return meta.symbol || meta.name || mint.slice(0, 4) + '...' + mint.slice(-4);
   };
 
+  const metaLogo = (mint) => {
+    if (mint === 'SOL') return tokenMetadata['SOL']?.logoURI;
+    return tokenMetadata[mint]?.logoURI || '';
+  };
+
   const handleCoincarne = async (mint, amount) => {
     try {
       const response = await fetch("/api/coincarnation/transfer", {
@@ -147,7 +151,6 @@ export default function CoincarneForm() {
             // await fetch('/api/generate-megy-image', { ... });
           }
 
-          setSuccessData({ id: ogdata.coincarnator_no, token: metaName(mint) });
           setMessage(null);
           localStorage.setItem('coincarneDone', 'true');
         } else {
@@ -169,35 +172,48 @@ export default function CoincarneForm() {
 
   return (
     <div className="text-white mt-4 space-y-6 text-center">
-      <div>
-        <label className="block text-sm mb-1 text-left">Choose a token to Coincarne:</label>
-        <select
-          onClick={() => setVisible(true)}
-          onChange={(e) => {
-            const mint = e.target.value;
-            const token = tokens.find(t => t.mint === mint);
-            setSelectedToken(token);
-            setManualAmount('');
-          }}
-          className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-red-500 rounded-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:brightness-110"
-          value={selectedToken?.mint || ''}
+      {/* Custom Token Dropdown */}
+      <div className="relative">
+        <div
+          onClick={() => setDropdownOpen(!dropdownOpen)}
+          className="w-full py-3 px-4 bg-gray-800 border border-red-500 rounded-lg flex items-center justify-between cursor-pointer hover:shadow-lg"
         >
-          <option value="" disabled>Select a token</option>
-          {tokens.map(token => (
-            <option key={token.mint} value={token.mint}>
-              {metaName(token.mint)} — {token.amount.toFixed(4)}
-            </option>
-          ))}
-        </select>
-        <div className="text-sm text-gray-400 mt-1">(Only revivable deadcoins appear)</div>
+          {selectedToken ? (
+            <div className="flex items-center space-x-3">
+              <img src={metaLogo(selectedToken.mint)} alt="logo" className="w-6 h-6 rounded-full" />
+              <span className="font-bold text-lg">{metaName(selectedToken.mint)}</span>
+              <span className="text-sm text-gray-400">({selectedToken.amount.toFixed(4)})</span>
+            </div>
+          ) : (
+            <span className="text-gray-400">Select a token</span>
+          )}
+          <span>▼</span>
+        </div>
+
+        {dropdownOpen && (
+          <div className="absolute z-10 w-full mt-2 bg-gray-900 border border-gray-700 rounded-lg max-h-64 overflow-y-auto">
+            {tokens.map(token => (
+              <div
+                key={token.mint}
+                onClick={() => {
+                  setSelectedToken(token);
+                  setManualAmount('');
+                  setDropdownOpen(false);
+                }}
+                className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-700 cursor-pointer"
+              >
+                <img src={metaLogo(token.mint)} alt="logo" className="w-5 h-5 rounded-full" />
+                <span className="font-medium">{metaName(token.mint)}</span>
+                <span className="text-xs text-gray-400 ml-auto">{token.amount.toFixed(4)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
+      {/* Amount Selection */}
       {selectedToken && (
         <div className="mt-6 space-y-4 text-left">
-          <p className="text-sm text-gray-300">
-            Balance: <span className="font-mono">{selectedToken.amount.toFixed(4)} {metaName(selectedToken.mint)}</span>
-          </p>
-
           <div className="flex space-x-2">
             {[25, 50, 75, 100].map((pct) => (
               <button
