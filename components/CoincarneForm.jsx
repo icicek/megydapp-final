@@ -56,6 +56,7 @@ export default function CoincarneForm() {
         name: 'Solana',
         logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/solana/info/logo.png',
       };
+      console.log("✅ Token metadata loaded:", metadataMap);
       setTokenMetadata(metadataMap);
     } catch (err) {
       console.error("Token metadata fetch error:", err);
@@ -105,8 +106,12 @@ export default function CoincarneForm() {
     }
   };
 
-  const metaName = (mint) =>
-    mint === 'SOL' ? 'SOL' : (tokenMetadata[mint]?.symbol || tokenMetadata[mint]?.name || mint.slice(0, 4) + "..." + mint.slice(-4));
+  const metaName = (mint) => {
+    if (mint === 'SOL') return 'SOL';
+    const meta = tokenMetadata[mint];
+    if (!meta) return '...';
+    return meta.symbol || meta.name || mint.slice(0, 4) + '...' + mint.slice(-4);
+  };
 
   const handleCoincarne = async (mint, amount) => {
     try {
@@ -194,7 +199,7 @@ export default function CoincarneForm() {
           </p>
 
           <div className="flex space-x-2">
-            {[25, 50, 100].map((pct) => (
+            {[25, 50, 75, 100].map((pct) => (
               <button
                 key={pct}
                 onClick={() =>
