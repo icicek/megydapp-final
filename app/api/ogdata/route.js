@@ -31,11 +31,9 @@ export async function GET(req) {
       return NextResponse.json({ success: false, error: 'Missing wallet address.' }, { status: 400 });
     }
 
-    // ✅ USD fiyatını hesapla
     const usdPrice = await getTokenUsdValue(token_contract);
     const usdValue = parseFloat((usdPrice * token_amount).toFixed(6));
 
-    // ✅ PARTICIPANTS kontrol ve ekleme
     const { rows: existing } = await pool.query(
       'SELECT id FROM participants WHERE wallet_address = $1',
       [wallet]
@@ -49,7 +47,7 @@ export async function GET(req) {
 
       await pool.query(
         `INSERT INTO participants
-        (wallet_address, token_symbol, token_contract, network, token_amount, usd_value, transaction_signiture, user_agent, timestamp)
+        (wallet_address, token_symbol, token_contract, network, token_amount, usd_value, transaction_signature, user_agent, timestamp)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
         [
           wallet,
@@ -70,10 +68,9 @@ export async function GET(req) {
       coincarnator_no = rows[0].id;
     }
 
-    // ✅ CONTRIBUTIONS kaydı
     await pool.query(
       `INSERT INTO contributions
-      (wallet_address, token_symbol, token_contract, network, token_amount, usd_value, transaction_signiture, user_agent, timestamp)
+      (wallet_address, token_symbol, token_contract, network, token_amount, usd_value, transaction_signature, user_agent, timestamp)
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())`,
       [
         wallet,
@@ -87,14 +84,12 @@ export async function GET(req) {
       ]
     );
 
-    // ✅ Kişisel toplam katkı
     const { rows: myRows } = await pool.query(
       'SELECT SUM(usd_value) AS my_total FROM contributions WHERE wallet_address = $1',
       [wallet]
     );
     const myUsd = parseFloat(myRows[0]?.my_total || 0);
 
-    // ✅ Tüm sistem katkısı
     const { rows: totalRows } = await pool.query(
       'SELECT SUM(usd_value) AS total FROM contributions'
     );
