@@ -1,9 +1,10 @@
-// ✅ File: components/CoincarnationResult.js
 'use client';
 
 import React from 'react';
 
-export default function CoincarnationResult({ tokenFrom, number, imageUrl }) {
+export default function CoincarnationResult({ tokenFrom, number }) {
+  const imageUrl = `/generated/coincarnator_${number}.png`;
+
   const tweetText = `🚀 I just swapped my $${tokenFrom} for $MEGY. Coincarnator #${number} reporting in.\n\n🌐 We're uniting deadcoins to rescue billions.\n\n🔗 Join us 👉 coincarnation.com`;
 
   const tweetLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;

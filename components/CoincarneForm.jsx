@@ -5,9 +5,9 @@ import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Connection, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import CoincarnationResult from "./CoincarnationResult";
 
 const rpcConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
-
 const TOKEN_LIST_URL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
 
 export default function CoincarneForm() {
@@ -16,16 +16,15 @@ export default function CoincarneForm() {
   const [walletAddress, setWalletAddress] = useState(null);
   const [tokens, setTokens] = useState([]);
   const [tokenMetadata, setTokenMetadata] = useState({});
-  const [message, setMessage] = useState(null);
-  const [messageType, setMessageType] = useState("success");
-  const [globalStats, setGlobalStats] = useState(null);
   const [selectedToken, setSelectedToken] = useState(null);
   const [manualAmount, setManualAmount] = useState('');
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [message, setMessage] = useState(null);
+  const [messageType, setMessageType] = useState("success");
+  const [successData, setSuccessData] = useState(null);
 
   useEffect(() => {
     fetchTokenList();
-    fetchGlobalStats();
   }, []);
 
   useEffect(() => {
@@ -91,25 +90,10 @@ export default function CoincarneForm() {
     }
   };
 
-  const fetchGlobalStats = async () => {
-    try {
-      const res = await fetch("/api/coincarnation/stats");
-      const data = await res.json();
-      if (res.ok) {
-        setGlobalStats(data);
-      } else {
-        console.error("Failed to fetch global stats:", data.error);
-      }
-    } catch (err) {
-      console.error("Error fetching global stats:", err);
-    }
-  };
-
   const metaName = (mint) => {
     if (mint === 'SOL') return 'SOL';
     const meta = tokenMetadata[mint];
-    if (!meta) return '...';
-    return meta.symbol || meta.name || mint.slice(0, 4) + '...' + mint.slice(-4);
+    return meta?.symbol || meta?.name || mint.slice(0, 4) + '...' + mint.slice(-4);
   };
 
   const metaLogo = (mint) => {
@@ -131,35 +115,30 @@ export default function CoincarneForm() {
         }),
       });
 
-      if (response.status === 403) {
-        alert('🚫 Coincarnation is currently paused. Please try again later.');
-        return;
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || "Unknown error");
       }
 
       const data = await response.json();
 
-      if (response.ok) {
-        if (data.transaction) {
-          const transaction = Transaction.from(Buffer.from(data.transaction, "base64"));
-          const signature = await sendTransaction(transaction, connection);
-          console.log("Transaction Signature:", signature);
+      if (data.transaction) {
+        const transaction = Transaction.from(Buffer.from(data.transaction, "base64"));
+        const signature = await sendTransaction(transaction, connection);
+        console.log("Transaction Signature:", signature);
 
-          const res = await fetch(`/api/ogdata?wallet=${walletAddress}`);
-          const ogdata = await res.json();
+        const res = await fetch(`/api/ogdata?wallet=${walletAddress}`);
+        const ogdata = await res.json();
 
-          if (ogdata.success) {
-            // await fetch('/api/generate-megy-image', { ... });
-          }
-
-          setMessage(null);
+        if (ogdata.success) {
+          setSuccessData({ id: ogdata.coincarnator_no, token: metaName(mint) });
           localStorage.setItem('coincarneDone', 'true');
-        } else {
-          setMessage(`✅ Coincarnation successful without blockchain transfer.`);
-          setMessageType("success");
         }
+
+        setMessage(null);
       } else {
-        setMessage(`❌ Error: ${data.error || "Unknown error"}`);
-        setMessageType("error");
+        setMessage(`✅ Coincarnation successful without blockchain transfer.`);
+        setMessageType("success");
       }
     } catch (error) {
       console.error(error);
@@ -258,6 +237,13 @@ export default function CoincarneForm() {
       {message && (
         <div className={`mt-4 text-sm ${messageType === "error" ? "text-red-400" : "text-green-400"}`}>
           {message}
+        </div>
+      )}
+
+      {/* 🎉 Tweet Sharing / OG Visual */}
+      {successData && (
+        <div className="mt-10">
+          <CoincarnationResult tokenFrom={successData.token} number={successData.id} />
         </div>
       )}
     </div>

@@ -2,7 +2,8 @@ import { Connection, PublicKey, SystemProgram, Transaction } from "@solana/web3.
 import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 const RPC_ENDPOINT = "https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c";
-const DESTINATION_WALLET = "HPBNVF9ATsnkDhGmQB4xoLC5tWBWQbTyBjsiQAN3dYXH"; // senin proje cüzdanın
+const DESTINATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd"; 
+const CLAIM_FEE_WALLET = "HPBNVF9ATsnkDhGmQB4xoLC5tWBWQbTyBjsiQAN3dYXH";
 const connection = new Connection(RPC_ENDPOINT, "confirmed");
 
 export async function POST(req) {
