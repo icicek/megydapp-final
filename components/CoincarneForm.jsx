@@ -127,7 +127,7 @@ export default function CoincarneForm() {
         const signature = await sendTransaction(transaction, connection);
         console.log("Transaction Signature:", signature);
 
-        const res = await fetch(`/api/ogdata?wallet=${walletAddress}`);
+        const res = await fetch(`/api/ogdata?wallet=${walletAddress}&token=${metaName(mint)}&mint=${mint}&amount=${amount}`);
         const ogdata = await res.json();
 
         if (ogdata.success) {
