@@ -1,5 +1,8 @@
 import pool from '@/lib/db';
 import { NextResponse } from 'next/server';
+import { createCanvas } from 'pureimage';
+import { UploadThingClient } from 'uploadthing/client';
+import { Readable } from 'stream';
 
 // ✅ USD fiyatı çekme fonksiyonu
 async function getTokenUsdValue(mintAddress) {
@@ -16,6 +19,38 @@ async function getTokenUsdValue(mintAddress) {
     console.warn(`[Price Fetch Warning] ${mintAddress}:`, err.message);
     return 0;
   }
+}
+
+async function generateAndUploadImage({ id, token, usd }) {
+  const width = 600;
+  const height = 600;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = 'black';
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = 'white';
+  ctx.font = '28pt Arial';
+  ctx.fillText(`Coincarnator #${id}`, 100, 200);
+  ctx.fillText(`Token: $${token}`, 100, 260);
+  ctx.fillText(`USD: $${usd}`, 100, 320);
+
+  const buffer = await new Promise((resolve) => {
+    const chunks = [];
+    const stream = canvas.createPNGStream();
+    stream.on('data', (chunk) => chunks.push(chunk));
+    stream.on('end', () => resolve(Buffer.concat(chunks)));
+  });
+
+  const file = new File([buffer], `coincarnator_${id}.png`, { type: 'image/png' });
+
+  const res = await UploadThingClient.upload({
+    endpoint: 'imageUploader',
+    files: [file],
+  });
+
+  return res[0].url;
 }
 
 export async function GET(req) {
@@ -97,11 +132,18 @@ export async function GET(req) {
 
     const percent = totalUsd > 0 ? 100 * (1 - myUsd / totalUsd) : 100;
 
+    const imageUrl = await generateAndUploadImage({
+      id: coincarnator_no,
+      token: token_symbol,
+      usd: usdValue,
+    });
+
     return NextResponse.json({
       success: true,
       coincarnator_no,
       usd: myUsd,
-      percent: parseFloat(percent.toFixed(2))
+      percent: parseFloat(percent.toFixed(2)),
+      imageUrl
     });
 
   } catch (err) {

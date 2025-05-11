@@ -1,9 +1,13 @@
 import { Connection, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
-import { getAssociatedTokenAddress, createTransferInstruction, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  getAssociatedTokenAddress,
+  createTransferInstruction,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 
 const RPC_ENDPOINT = "https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c";
-const DESTINATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd"; 
-const CLAIM_FEE_WALLET = "HPBNVF9ATsnkDhGmQB4xoLC5tWBWQbTyBjsiQAN3dYXH";
+const DESTINATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd"; // Coincarnation deposu
+const CLAIM_FEE_WALLET = "HPBNVF9ATsnkDhGmQB4xoLC5tWBWQbTyBjsiQAN3dYXH"; // Sadece claim ücretleri
 const connection = new Connection(RPC_ENDPOINT, "confirmed");
 
 export async function POST(req) {
@@ -20,23 +24,31 @@ export async function POST(req) {
     const transaction = new Transaction({ feePayer: fromPubkey, recentBlockhash });
 
     if (mint === "SOL") {
-      // SOL transfer
+      // ✅ SOL transfer
       const lamports = Math.floor(parseFloat(amount) * 1e9);
-      transaction.add(SystemProgram.transfer({
-        fromPubkey,
-        toPubkey,
-        lamports,
-      }));
+      transaction.add(
+        SystemProgram.transfer({
+          fromPubkey,
+          toPubkey,
+          lamports,
+        })
+      );
     } else {
-      // SPL transfer
+      // ✅ SPL Token transfer
       const mintPubkey = new PublicKey(mint);
       const sourceAta = await getAssociatedTokenAddress(mintPubkey, fromPubkey);
       const destAta = await getAssociatedTokenAddress(mintPubkey, toPubkey);
 
-      const decimals = await connection.getParsedAccountInfo(mintPubkey);
-      const decimalCount = decimals?.value?.data?.parsed?.info?.decimals || 9;
+      let decimalCount = 9;
+      try {
+        const parsed = await connection.getParsedAccountInfo(mintPubkey);
+        decimalCount = parsed?.value?.data?.parsed?.info?.decimals || 9;
+      } catch (e) {
+        console.warn(`⚠️ Couldn't fetch decimals for ${mint}, defaulting to 9`);
+      }
+
       const multiplier = 10 ** decimalCount;
-      const tokenAmount = BigInt(parseFloat(amount) * multiplier);
+      const tokenAmount = BigInt((parseFloat(amount) * multiplier).toFixed(0));
 
       transaction.add(
         createTransferInstruction(
@@ -55,7 +67,7 @@ export async function POST(req) {
 
     return Response.json({ transaction: base64Tx });
   } catch (err) {
-    console.error("❌ Coincarnation Transfer API error:", err);
+    console.error(`❌ Coincarnation Transfer Error for ${req.body?.wallet_address || "unknown"} → ${req.body?.mint || "unknown"}:`, err);
     return Response.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
