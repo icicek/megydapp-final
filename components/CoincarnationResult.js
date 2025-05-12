@@ -7,7 +7,7 @@ export default function CoincarnationResult({ tokenFrom, number, imageUrl, walle
   const [tweetUrl, setTweetUrl] = useState('');
   const [submitMessage, setSubmitMessage] = useState(null);
 
-  const tweetText = `🚀 I just swapped my $${tokenFrom} for $MEGY. Coincarnator #${number} reporting in.\n\n🌐 We're uniting deadcoins to rescue billions.\n\n🔗 Join us 👉 coincarnation.com`;
+  const tweetText = `🚀 I just swapped my $${tokenFrom} for $MEGY. Coincarnator #${number} reporting in.\n\n🌐 We&apos;re uniting deadcoins to rescue billions.\n\n🔗 Join us 👉 coincarnation.com`;
 
   const tweetLink = `https://twitter.com/intent/tweet?text=${encodeURIComponent(tweetText)}`;
 
