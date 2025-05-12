@@ -94,7 +94,7 @@ export default function CoincarnationResult({ tokenFrom, number, imageUrl, walle
       }}>
         <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '10px' }}>🔥 Think your loss was legendary?</p>
         <p>Tweet your Coincarnation to earn a shot at the rarest NFTs!</p>
-        <p style={{ fontSize: '13px', color: '#bbb', marginTop: '6px' }}>💎 The more you've lost, the rarer your NFT. The biggest losses get priority.</p>
+        <p style={{ fontSize: '13px', color: '#bbb', marginTop: '6px' }}>💎 The more you&apos;ve lost, the rarer your NFT. The biggest losses get priority.</p>
 
         <a
           href={tweetLink}
