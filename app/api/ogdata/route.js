@@ -1,7 +1,8 @@
 import pool from '@/lib/db';
 import { NextResponse } from 'next/server';
-const PImage = require('pureimage'); 
+const PImage = require('pureimage');
 import { Readable } from 'stream';
+import { uploadFile } from '@/lib/uploadthingClient'; // ✅ GÜNCELLENDİ
 
 // ✅ USD fiyatı çekme fonksiyonu
 async function getTokenUsdValue(mintAddress) {
@@ -45,9 +46,8 @@ async function generateAndUploadImage({ id, token, usd }) {
 
   const file = new File([buffer], `coincarnator_${id}.png`, { type: 'image/png' });
 
-  const { uploadFiles } = await import('@/utils/uploadthingClient');
-  const res = await uploadFiles('imageUploader', [file]);
-  return res[0].url;
+  const res = await uploadFile(file); // ✅ YENİLEME
+  return res?.data?.[0]?.url;
 }
 
 export async function GET(req) {
