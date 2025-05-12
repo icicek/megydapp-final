@@ -1,7 +1,6 @@
 import pool from '@/lib/db';
 import { NextResponse } from 'next/server';
-import { createCanvas } from 'pureimage';
-import { UploadThingClient } from 'uploadthing/client';
+import PImage from 'pureimage';
 import { Readable } from 'stream';
 
 // ✅ USD fiyatı çekme fonksiyonu
@@ -21,11 +20,12 @@ async function getTokenUsdValue(mintAddress) {
   }
 }
 
+// ✅ Görsel üret ve UploadThing'e gönder
 async function generateAndUploadImage({ id, token, usd }) {
   const width = 600;
   const height = 600;
-  const canvas = createCanvas(width, height);
-  const ctx = canvas.getContext('2d');
+  const img = PImage.make(width, height);
+  const ctx = img.getContext('2d');
 
   ctx.fillStyle = 'black';
   ctx.fillRect(0, 0, width, height);
@@ -36,20 +36,17 @@ async function generateAndUploadImage({ id, token, usd }) {
   ctx.fillText(`Token: $${token}`, 100, 260);
   ctx.fillText(`USD: $${usd}`, 100, 320);
 
+  const stream = PImage.encodePNGToStream(img, Readable.from([]));
   const buffer = await new Promise((resolve) => {
     const chunks = [];
-    const stream = canvas.createPNGStream();
     stream.on('data', (chunk) => chunks.push(chunk));
     stream.on('end', () => resolve(Buffer.concat(chunks)));
   });
 
   const file = new File([buffer], `coincarnator_${id}.png`, { type: 'image/png' });
 
-  const res = await UploadThingClient.upload({
-    endpoint: 'imageUploader',
-    files: [file],
-  });
-
+  const { uploadFiles } = await import('@/utils/uploadthingClient');
+  const res = await uploadFiles('imageUploader', [file]);
   return res[0].url;
 }
 
