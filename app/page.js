@@ -7,6 +7,7 @@ import CoincarneForm from '../components/CoincarneForm';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import dynamic from 'next/dynamic';
+import { uploadFile } from '@/lib/uploadthingClient';
 
 // ✅ Lottie animasyonu sadece client'ta render edilsin
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
@@ -20,6 +21,10 @@ export default function Home() {
   const [timeLeft, setTimeLeft] = useState({});
   const [hasCoincarneDone, setHasCoincarneDone] = useState(false);
   const [swapAnimationData, setSwapAnimationData] = useState(null);
+
+  // 🔼 UploadThing için eklenen state
+  const [uploadedUrl, setUploadedUrl] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
     fetch('/animations/looping-swap.json')
@@ -79,6 +84,21 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [endDate]);
 
+  const handleFileChange = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const res = await uploadFile(file);
+      const url = res?.data?.[0]?.url;
+      setUploadedUrl(url);
+    } catch (err) {
+      console.error('Upload failed:', err);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center text-center p-6">
       <h1 className="text-4xl font-bold mb-4">🚀 Welcome to MEGY Coincarnation</h1>
@@ -127,6 +147,19 @@ export default function Home() {
             <span className="text-sm text-gray-400 ml-2">(Future of Money)</span>
           </div>
         </div>
+      </div>
+
+      {/* Image Upload */}
+      <div className="mt-10 w-full max-w-md">
+        <label className="block mb-2 text-sm font-medium text-gray-300">Upload a sample image (test)</label>
+        <input type="file" accept="image/*" onChange={handleFileChange} className="block w-full text-sm text-white file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-green-500 file:text-black hover:file:bg-green-600" />
+        {uploading && <p className="mt-2 text-sm text-yellow-400">Uploading...</p>}
+        {uploadedUrl && (
+          <div className="mt-4">
+            <p className="text-sm text-gray-400">Uploaded Image:</p>
+            <img src={uploadedUrl} alt="Uploaded" className="mt-2 rounded-md w-64 mx-auto" />
+          </div>
+        )}
       </div>
 
       {/* Coincarne Form */}

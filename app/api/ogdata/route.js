@@ -1,6 +1,6 @@
 import pool from '@/lib/db';
 import { NextResponse } from 'next/server';
-import PImage from 'pureimage';
+const PImage = require('pureimage'); 
 import { Readable } from 'stream';
 
 // ✅ USD fiyatı çekme fonksiyonu
