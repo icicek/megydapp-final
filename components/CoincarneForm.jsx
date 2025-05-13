@@ -5,7 +5,7 @@ import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Connection, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
 
 const rpcConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
 const TOKEN_LIST_URL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
@@ -14,6 +14,7 @@ export default function CoincarneForm() {
   const { publicKey, connected, sendTransaction } = useWallet();
   const { connection } = useConnection();
   const router = useRouter();
+
   const [walletAddress, setWalletAddress] = useState(null);
   const [tokens, setTokens] = useState([]);
   const [tokenMetadata, setTokenMetadata] = useState({});
@@ -131,8 +132,8 @@ export default function CoincarneForm() {
         const ogdata = await res.json();
 
         if (ogdata.success) {
-          window.location.href = `/success?tokenFrom=${metaName(mint)}&number=${ogdata.coincarnator_no}`;
-          return;
+          localStorage.setItem('coincarneDone', 'true');
+          router.push(`/success?tokenFrom=${metaName(mint)}&number=${ogdata.coincarnator_no}`);
         }
 
         setMessage(null);
