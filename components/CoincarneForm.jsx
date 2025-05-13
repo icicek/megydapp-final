@@ -20,7 +20,6 @@ export default function CoincarneForm() {
   const [tokenMetadata, setTokenMetadata] = useState({});
   const [selectedToken, setSelectedToken] = useState(null);
   const [manualAmount, setManualAmount] = useState('');
-  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState("success");
 
@@ -130,9 +129,10 @@ export default function CoincarneForm() {
 
         const res = await fetch(`/api/ogdata?wallet=${walletAddress}&token=${metaName(mint)}&mint=${mint}&amount=${amount}`);
         const ogdata = await res.json();
+        console.log("OGDATA:", ogdata);
 
         if (ogdata.success) {
-          localStorage.setItem('coincarneDone', 'true');
+          console.log("Redirecting to /success...");
           router.push(`/success?tokenFrom=${metaName(mint)}&number=${ogdata.coincarnator_no}`);
         }
 
@@ -152,62 +152,29 @@ export default function CoincarneForm() {
 
   return (
     <div className="text-white mt-4 space-y-6 text-center">
-      <div className="relative">
-        <div
-          onClick={() => setDropdownOpen(!dropdownOpen)}
-          className="w-full py-3 px-4 bg-gray-800 border border-red-500 rounded-lg flex items-center justify-between cursor-pointer hover:shadow-lg"
+      {/* Token Dropdown */}
+      <div className="relative max-w-md mx-auto">
+        <select
+          className="w-full p-3 bg-gray-800 border border-red-500 rounded text-white"
+          onChange={(e) => {
+            const selected = tokens.find(t => t.mint === e.target.value);
+            setSelectedToken(selected);
+            setManualAmount('');
+          }}
+          value={selectedToken?.mint || ''}
         >
-          {selectedToken ? (
-            <div className="flex items-center space-x-3">
-              <img src={metaLogo(selectedToken.mint)} alt="logo" className="w-6 h-6 rounded-full" />
-              <span className="font-bold text-lg">{metaName(selectedToken.mint)}</span>
-              <span className="text-sm text-gray-400">({selectedToken.amount.toFixed(4)})</span>
-            </div>
-          ) : (
-            <span className="text-gray-400">Select a token</span>
-          )}
-          <span>▼</span>
-        </div>
-
-        {dropdownOpen && (
-          <div className="absolute z-10 w-full mt-2 bg-gray-900 border border-gray-700 rounded-lg max-h-64 overflow-y-auto">
-            {tokens.map(token => (
-              <div
-                key={token.mint}
-                onClick={() => {
-                  setSelectedToken(token);
-                  setManualAmount('');
-                  setDropdownOpen(false);
-                }}
-                className="flex items-center space-x-3 px-4 py-2 hover:bg-gray-700 cursor-pointer"
-              >
-                <img src={metaLogo(token.mint)} alt="logo" className="w-5 h-5 rounded-full" />
-                <span className="font-medium">{metaName(token.mint)}</span>
-                <span className="text-xs text-gray-400 ml-auto">{token.amount.toFixed(4)}</span>
-              </div>
-            ))}
-          </div>
-        )}
+          <option value="" disabled>Select a token to coincarnate</option>
+          {tokens.map(token => (
+            <option key={token.mint} value={token.mint}>
+              {metaName(token.mint)} ({token.amount.toFixed(4)})
+            </option>
+          ))}
+        </select>
       </div>
 
+      {/* Amount Input */}
       {selectedToken && (
-        <div className="mt-6 space-y-4 text-left">
-          <div className="flex space-x-2">
-            {[25, 50, 75, 100].map((pct) => (
-              <button
-                key={pct}
-                onClick={() =>
-                  setManualAmount(
-                    ((selectedToken.amount * pct) / 100).toFixed(4)
-                  )
-                }
-                className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white"
-              >
-                %{pct}
-              </button>
-            ))}
-          </div>
-
+        <div className="max-w-md mx-auto space-y-4">
           <input
             type="number"
             min="0"
@@ -215,7 +182,7 @@ export default function CoincarneForm() {
             placeholder="Enter amount to Coincarne"
             value={manualAmount}
             onChange={(e) => setManualAmount(e.target.value)}
-            className="w-full mt-2 p-3 bg-gray-800 border border-gray-600 rounded text-white text-lg"
+            className="w-full p-3 bg-gray-800 border border-gray-600 rounded text-white"
           />
 
           <button
@@ -226,13 +193,14 @@ export default function CoincarneForm() {
               }
               handleCoincarne(selectedToken.mint, parseFloat(manualAmount));
             }}
-            className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition"
+            className="w-full mt-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition"
           >
             Coincarnate {manualAmount} {metaName(selectedToken.mint)}
           </button>
         </div>
       )}
 
+      {/* Feedback Message */}
       {message && (
         <div className={`mt-4 text-sm ${messageType === "error" ? "text-red-400" : "text-green-400"}`}>
           {message}
