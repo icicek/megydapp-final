@@ -131,7 +131,12 @@ export default function CoincarneForm() {
         const ogdata = await res.json();
 
         if (ogdata.success) {
-          setSuccessData({ id: ogdata.coincarnator_no, token: metaName(mint) });
+          setSuccessData({
+            id: ogdata.coincarnator_no,
+            token: metaName(mint),
+            imageUrl: ogdata.image_url,
+            walletAddress: walletAddress
+          });
           localStorage.setItem('coincarneDone', 'true');
         }
 
@@ -151,7 +156,7 @@ export default function CoincarneForm() {
 
   return (
     <div className="text-white mt-4 space-y-6 text-center">
-      {/* Custom Token Dropdown */}
+      {/* Token Selector */}
       <div className="relative">
         <div
           onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -240,10 +245,15 @@ export default function CoincarneForm() {
         </div>
       )}
 
-      {/* 🎉 Tweet Sharing / OG Visual */}
+      {/* 🎉 OG Result */}
       {successData && (
         <div className="mt-10">
-          <CoincarnationResult tokenFrom={successData.token} number={successData.id} />
+          <CoincarnationResult
+            tokenFrom={successData.token}
+            number={successData.id}
+            imageUrl={successData.imageUrl}
+            walletAddress={successData.walletAddress}
+          />
         </div>
       )}
     </div>
