@@ -1,42 +1,39 @@
+// ✅ File: app/api/claim/user-stats/route.js
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
+import pool from '@/lib/db'; // Neon bağlantısı
 
 export async function POST(req) {
-  const { wallet } = await req.json();
+  try {
+    const { wallet } = await req.json();
 
-  if (!wallet) {
-    return NextResponse.json({ error: 'Missing wallet' }, { status: 400 });
+    if (!wallet) {
+      return NextResponse.json({ error: 'Missing wallet' }, { status: 400 });
+    }
+
+    const { rows } = await pool.query(
+      `SELECT *
+       FROM claims
+       WHERE wallet_address = $1
+       ORDER BY claimed_at DESC
+       LIMIT 1`,
+      [wallet]
+    );
+
+    const record = rows?.[0];
+
+    if (!record) {
+      return NextResponse.json({ error: 'No claim found' }, { status: 404 });
+    }
+
+    return NextResponse.json({
+      coincarnatorNo: record.coincarnator_no || 999,
+      contributionUSD: parseFloat(record.usd_value || 0),
+      shareRatio: parseFloat(record.share_ratio || 0),
+      claimableMEGY: parseFloat(record.amount || 0),
+      claimStatus: true,
+    });
+  } catch (err) {
+    console.error('User stats error:', err);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
-
-  // Supabase'ten claim verilerini al
-  const { data, error } = await supabase
-    .from('claims')
-    .select('*')
-    .eq('wallet_address', wallet)
-    .order('claimed_at', { ascending: false })
-    .limit(1);
-
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-
-  const record = data?.[0];
-
-  if (!record) {
-    return NextResponse.json({ error: 'No claim found' }, { status: 404 });
-  }
-
-  // Geriye temel verileri döndür
-  return NextResponse.json({
-    coincarnatorNo: record.coincarnator_no || 999, // default
-    contributionUSD: record.usd_value || 0,
-    shareRatio: record.share_ratio || 0,
-    claimableMEGY: record.amount || 0,
-    claimStatus: true,
-  });
 }

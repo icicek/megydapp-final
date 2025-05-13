@@ -1,34 +1,24 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import pool from '@/lib/db'; // Neon PostgreSQL bağlantısı
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-);
-
-export async function POST(request) {
+export async function POST(req) {
   try {
-    const body = await request.json();
+    const body = await req.json();
+    const { wallet, amount, share_ratio, usd_value, coincarnator_no } = body;
 
-    const { wallet_address, claim_address, amount, claimed_at } = body;
-
-    const { data, error } = await supabase.from('claims').insert([
-      {
-        wallet_address,
-        claim_address,
-        amount,
-        claimed_at,
-      }
-    ]);
-
-    if (error) {
-      console.error('❌ Supabase insert error:', error.message);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!wallet || !amount) {
+      return NextResponse.json({ success: false, error: 'Missing fields' }, { status: 400 });
     }
 
-    return NextResponse.json({ success: true, data });
+    await pool.query(
+      `INSERT INTO claims (wallet_address, amount, share_ratio, usd_value, coincarnator_no, claimed_at)
+       VALUES ($1, $2, $3, $4, $5, NOW())`,
+      [wallet, amount, share_ratio, usd_value, coincarnator_no]
+    );
+
+    return NextResponse.json({ success: true });
   } catch (err) {
-    console.error('❌ API error:', err);
-    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+    console.error('[Save Claim Error]', err);
+    return NextResponse.json({ success: false, error: err.message }, { status: 500 });
   }
 }
