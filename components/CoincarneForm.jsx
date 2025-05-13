@@ -132,7 +132,10 @@ export default function CoincarneForm() {
         console.log("OGDATA:", ogdata);
 
         if (ogdata.success) {
-          console.log("Redirecting to /success...");
+          console.log("Redirecting to /success...", {
+            tokenFrom: metaName(mint),
+            number: ogdata.coincarnator_no,
+          });
           router.push(`/success?tokenFrom=${metaName(mint)}&number=${ogdata.coincarnator_no}`);
         }
 
@@ -152,7 +155,6 @@ export default function CoincarneForm() {
 
   return (
     <div className="text-white mt-4 space-y-6 text-center">
-      {/* Token Dropdown */}
       <div className="relative max-w-md mx-auto">
         <select
           className="w-full p-3 bg-gray-800 border border-red-500 rounded text-white"
@@ -172,9 +174,22 @@ export default function CoincarneForm() {
         </select>
       </div>
 
-      {/* Amount Input */}
       {selectedToken && (
         <div className="max-w-md mx-auto space-y-4">
+          <div className="flex space-x-2">
+            {[25, 50, 75, 100].map((pct) => (
+              <button
+                key={pct}
+                onClick={() =>
+                  setManualAmount(((selectedToken.amount * pct) / 100).toFixed(4))
+                }
+                className="flex-1 py-2 bg-gray-700 hover:bg-gray-600 rounded text-sm text-white"
+              >
+                %{pct}
+              </button>
+            ))}
+          </div>
+
           <input
             type="number"
             min="0"
@@ -182,7 +197,7 @@ export default function CoincarneForm() {
             placeholder="Enter amount to Coincarne"
             value={manualAmount}
             onChange={(e) => setManualAmount(e.target.value)}
-            className="w-full p-3 bg-gray-800 border border-gray-600 rounded text-white"
+            className="w-full mt-2 p-3 bg-gray-800 border border-gray-600 rounded text-white text-lg"
           />
 
           <button
@@ -193,14 +208,13 @@ export default function CoincarneForm() {
               }
               handleCoincarne(selectedToken.mint, parseFloat(manualAmount));
             }}
-            className="w-full mt-2 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition"
+            className="w-full mt-4 bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 px-6 rounded-xl transition"
           >
             Coincarnate {manualAmount} {metaName(selectedToken.mint)}
           </button>
         </div>
       )}
 
-      {/* Feedback Message */}
       {message && (
         <div className={`mt-4 text-sm ${messageType === "error" ? "text-red-400" : "text-green-400"}`}>
           {message}
