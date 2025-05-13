@@ -99,6 +99,13 @@ export default function CoincarneForm() {
 
   return (
     <div className="text-white mt-4 space-y-6 text-center">
+      <div className="mb-6">
+        <WalletMultiButton />
+        {walletAddress && (
+          <div className="mt-2 text-sm text-gray-400">Connected: {walletAddress}</div>
+        )}
+      </div>
+
       <div className="max-w-md mx-auto">
         <select
           className="w-full p-3 bg-gray-800 border border-red-500 rounded text-white"
