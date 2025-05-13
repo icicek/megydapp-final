@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import CoincarnationResult from '../../components/CoincarnationResult';
+// import CoincarnationResult from '../../components/CoincarnationResult';
 import { Button } from '@/components/ui/button';
 
 export default function SuccessContent() {
