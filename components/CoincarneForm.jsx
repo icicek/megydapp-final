@@ -5,7 +5,7 @@ import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { WalletMultiButton } from "@solana/wallet-adapter-react-ui";
 import { Connection, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import CoincarnationResult from "./CoincarnationResult";
+import { useRouter } from "next/navigation";
 
 const rpcConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
 const TOKEN_LIST_URL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
@@ -13,6 +13,7 @@ const TOKEN_LIST_URL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/
 export default function CoincarneForm() {
   const { publicKey, connected, sendTransaction } = useWallet();
   const { connection } = useConnection();
+  const router = useRouter();
   const [walletAddress, setWalletAddress] = useState(null);
   const [tokens, setTokens] = useState([]);
   const [tokenMetadata, setTokenMetadata] = useState({});
@@ -21,7 +22,6 @@ export default function CoincarneForm() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [message, setMessage] = useState(null);
   const [messageType, setMessageType] = useState("success");
-  const [successData, setSuccessData] = useState(null);
 
   useEffect(() => {
     fetchTokenList();
@@ -131,13 +131,8 @@ export default function CoincarneForm() {
         const ogdata = await res.json();
 
         if (ogdata.success) {
-          setSuccessData({
-            id: ogdata.coincarnator_no,
-            token: metaName(mint),
-            imageUrl: ogdata.image_url,
-            walletAddress: walletAddress
-          });
-          localStorage.setItem('coincarneDone', 'true');
+          window.location.href = `/success?tokenFrom=${metaName(mint)}&number=${ogdata.coincarnator_no}`;
+          return;
         }
 
         setMessage(null);
@@ -156,7 +151,6 @@ export default function CoincarneForm() {
 
   return (
     <div className="text-white mt-4 space-y-6 text-center">
-      {/* Token Selector */}
       <div className="relative">
         <div
           onClick={() => setDropdownOpen(!dropdownOpen)}
@@ -195,7 +189,6 @@ export default function CoincarneForm() {
         )}
       </div>
 
-      {/* Amount Selection */}
       {selectedToken && (
         <div className="mt-6 space-y-4 text-left">
           <div className="flex space-x-2">
@@ -242,18 +235,6 @@ export default function CoincarneForm() {
       {message && (
         <div className={`mt-4 text-sm ${messageType === "error" ? "text-red-400" : "text-green-400"}`}>
           {message}
-        </div>
-      )}
-
-      {/* 🎉 OG Result */}
-      {successData && (
-        <div className="mt-10">
-          <CoincarnationResult
-            tokenFrom={successData.token}
-            number={successData.id}
-            imageUrl={successData.imageUrl}
-            walletAddress={successData.walletAddress}
-          />
         </div>
       )}
     </div>
