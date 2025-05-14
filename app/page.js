@@ -20,11 +20,8 @@ export default function Home() {
   const [endDate, setEndDate] = useState(null);
   const [timeLeft, setTimeLeft] = useState({});
   const [swapAnimationData, setSwapAnimationData] = useState(null);
-
-  // ✅ Modal kontrolü için state
   const [modalOpen, setModalOpen] = useState(false);
-  const [selectedToken, setSelectedToken] = useState(null);
-  const [selectedAmount, setSelectedAmount] = useState(null);
+  const [modalData, setModalData] = useState({ token: '', amount: 0 });
 
   useEffect(() => {
     fetch('/animations/looping-swap.json')
@@ -79,6 +76,11 @@ export default function Home() {
     return () => clearInterval(timer);
   }, [endDate]);
 
+  const handleTokenSelect = (token, amount) => {
+    setModalData({ token, amount });
+    setModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center text-center p-6">
       <h1 className="text-4xl font-bold mb-4">🚀 Welcome to MEGY Coincarnation</h1>
@@ -126,11 +128,7 @@ export default function Home() {
 
       {/* Coincarne Form */}
       <div className="mt-10 w-full max-w-2xl">
-        <CoincarneForm onSelectToken={(token, amount) => {
-          setSelectedToken(token);
-          setSelectedAmount(amount);
-          setModalOpen(true);
-        }} />
+        <CoincarneForm onSelectToken={handleTokenSelect} />
       </div>
 
       {/* Claim butonu */}
@@ -163,8 +161,8 @@ export default function Home() {
       <CoincarneConfirmModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        token={selectedToken}
-        amount={selectedAmount}
+        token={modalData.token}
+        amount={modalData.amount}
       />
     </div>
   );
