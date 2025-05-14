@@ -8,7 +8,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import dynamic from 'next/dynamic';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import CoincarneConfirmModal from '@/components/CoincarneConfirmModal';
+import { Dialog, DialogContent, DialogOverlay } from '@/components/ui/dialog';
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
@@ -97,7 +97,6 @@ export default function Home() {
           onClick={() => setVisible(true)}
           className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-6 shadow-xl cursor-pointer"
         >
-          {/* You give */}
           <div className="text-sm text-gray-400 mb-1 text-left flex items-center space-x-2">
             <span className="animate-pulse">💀</span>
             <span>You give</span>
@@ -107,10 +106,8 @@ export default function Home() {
             <span className="text-sm text-gray-400 ml-2">(Memecoins, shitcoins...)</span>
           </div>
 
-          {/* Swap Line */}
           <div className="my-4 text-center text-white font-bold text-lg">Coincarnate</div>
 
-          {/* You receive */}
           <div className="text-sm text-gray-400 mb-1 text-left flex items-center space-x-2">
             <span className="animate-bounce">🚀</span>
             <span>You receive</span>
@@ -126,12 +123,10 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Coincarne Form */}
       <div className="mt-10 w-full max-w-2xl">
         <CoincarneForm onSelectToken={handleTokenSelect} />
       </div>
 
-      {/* Claim butonu */}
       <div className="mt-8 flex justify-center">
         <Link href={walletAddress ? '/claim' : '#'}>
           <button
@@ -143,14 +138,12 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* Latest participant */}
       {stats.latest && (
         <div className="mt-6 text-sm text-gray-300">
           🧑‍🚀 Latest: <span className="font-mono">{stats.latest.wallet}</span> revived <span className="font-bold">{stats.latest.token}</span>
         </div>
       )}
 
-      {/* Countdown */}
       {!timeLeft.expired && endDate && (
         <div className="mt-4 text-sm text-yellow-400">
           ⏳ {timeLeft.days} days {timeLeft.hours}:{timeLeft.minutes?.toString().padStart(2, '0')}:{timeLeft.seconds?.toString().padStart(2, '0')} remaining...
@@ -158,12 +151,20 @@ export default function Home() {
       )}
 
       {/* Modal */}
-      <CoincarneConfirmModal
-        open={modalOpen}
-        onClose={() => setModalOpen(false)}
-        token={modalData.token}
-        amount={modalData.amount}
-      />
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogOverlay className="fixed inset-0 bg-black/70" />
+        <DialogContent className="bg-gray-900 border border-white rounded-2xl p-6 w-full max-w-md mx-auto text-center">
+          <h2 className="text-xl font-bold mb-4">Coincarnate {modalData.token}</h2>
+          <p className="text-sm text-gray-400 mb-2">You have {modalData.amount.toFixed(4)} {modalData.token} in your wallet</p>
+          <div className="mt-4 space-x-2">
+            {[25, 50, 75, 100].map(pct => (
+              <button key={pct} className="bg-gray-700 px-3 py-1 rounded text-white">%{pct}</button>
+            ))}
+          </div>
+          <input type="number" placeholder="Enter amount" className="mt-4 w-full p-2 rounded bg-gray-800 border border-gray-600 text-white" />
+          <button className="mt-4 w-full bg-purple-600 hover:bg-purple-700 py-2 rounded-xl font-bold">Confirm Coincarnation</button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
