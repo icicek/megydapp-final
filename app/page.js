@@ -3,9 +3,12 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import CountUp from 'react-countup';
-import CoincarneForm from '../components/CoincarneForm';
+import CoincarneForm from '@/components/CoincarneForm';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
+import dynamic from 'next/dynamic';
+
+const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 export default function Home() {
   const { publicKey } = useWallet();
@@ -14,6 +17,14 @@ export default function Home() {
   const [stats, setStats] = useState({ participantCount: 0, totalUsdValue: 0, latest: null });
   const [endDate, setEndDate] = useState(null);
   const [timeLeft, setTimeLeft] = useState({});
+  const [swapAnimationData, setSwapAnimationData] = useState(null);
+
+  useEffect(() => {
+    fetch('/animations/looping-swap.json')
+      .then(res => res.json())
+      .then(data => setSwapAnimationData(data))
+      .catch(err => console.error("Lottie animation fetch error:", err));
+  }, []);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -71,12 +82,52 @@ export default function Home() {
         <p>💸 $<CountUp key={stats.totalUsdValue} end={stats.totalUsdValue} duration={1.5} decimals={2} /> worth of deadcoins revived.</p>
       </div>
 
-      {/* ✅ Coincarnation UI */}
-      <div className="mt-12 w-full max-w-2xl">
+      {/* Swap UI */}
+      <div className="mt-10 w-full max-w-xl mx-auto px-4 animate-fade-in">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-6 shadow-xl">
+          {/* You give */}
+          <div className="text-sm text-gray-400 mb-1 text-left flex items-center space-x-2">
+            <span className="animate-pulse">💀</span>
+            <span>You give</span>
+          </div>
+          <div
+            onClick={() => setVisible(true)}
+            className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-red-500 rounded-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:brightness-110 flex items-center justify-between cursor-pointer"
+          >
+            <span>Walking Deadcoins</span>
+            <span className="text-sm text-gray-400 ml-2">(Memecoins, shitcoins...)</span>
+          </div>
+
+          {/* Swap Animation */}
+          <div className="flex items-center justify-center my-4">
+            {swapAnimationData && (
+              <Lottie
+                animationData={swapAnimationData}
+                loop
+                autoplay
+                style={{ width: 80, height: 80 }}
+              />
+            )}
+          </div>
+
+          {/* You receive */}
+          <div className="text-sm text-gray-400 mb-1 text-left flex items-center space-x-2">
+            <span className="animate-bounce">🚀</span>
+            <span>You receive</span>
+          </div>
+          <div className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-green-500 rounded-lg flex items-center justify-between transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:brightness-110">
+            <span>MEGY</span>
+            <span className="text-sm text-gray-400 ml-2">(Future of Money)</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Coincarne Form */}
+      <div className="mt-10 w-full max-w-2xl">
         <CoincarneForm />
       </div>
 
-      {/* 👤 Claim Butonu */}
+      {/* Claim butonu */}
       <div className="mt-8 flex justify-center">
         <Link href={walletAddress ? '/claim' : '#'}>
           <button
@@ -88,14 +139,14 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* 👽 En Son Katılımcı */}
+      {/* Latest participant */}
       {stats.latest && (
         <div className="mt-6 text-sm text-gray-300">
           🧑‍🚀 Latest: <span className="font-mono">{stats.latest.wallet}</span> revived <span className="font-bold">{stats.latest.token}</span>
         </div>
       )}
 
-      {/* ⏳ Geri Sayım */}
+      {/* Countdown */}
       {!timeLeft.expired && endDate && (
         <div className="mt-4 text-sm text-yellow-400">
           ⏳ {timeLeft.days} days {timeLeft.hours}:{timeLeft.minutes?.toString().padStart(2, '0')}:{timeLeft.seconds?.toString().padStart(2, '0')} remaining...
