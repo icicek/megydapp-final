@@ -7,6 +7,7 @@ import CoincarneForm from '@/components/CoincarneForm';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import dynamic from 'next/dynamic';
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
@@ -84,41 +85,36 @@ export default function Home() {
 
       {/* Swap UI */}
       <div className="mt-10 w-full max-w-xl mx-auto px-4 animate-fade-in">
-        <div className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-6 shadow-xl">
+        <div
+          onClick={() => setVisible(true)}
+          className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-6 shadow-xl cursor-pointer"
+        >
           {/* You give */}
           <div className="text-sm text-gray-400 mb-1 text-left flex items-center space-x-2">
             <span className="animate-pulse">💀</span>
             <span>You give</span>
           </div>
-          <div
-            onClick={() => setVisible(true)}
-            className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-red-500 rounded-lg transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:brightness-110 flex items-center justify-between cursor-pointer"
-          >
+          <div className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-red-500 rounded-lg flex items-center justify-between">
             <span>Walking Deadcoins</span>
             <span className="text-sm text-gray-400 ml-2">(Memecoins, shitcoins...)</span>
           </div>
 
-          {/* Swap Animation */}
-          <div className="flex items-center justify-center my-4">
-            {swapAnimationData && (
-              <Lottie
-                animationData={swapAnimationData}
-                loop
-                autoplay
-                style={{ width: 80, height: 80 }}
-              />
-            )}
-          </div>
+          {/* Swap Line */}
+          <div className="my-4 text-center text-white font-bold text-lg">↔️ Coincarnate</div>
 
           {/* You receive */}
           <div className="text-sm text-gray-400 mb-1 text-left flex items-center space-x-2">
             <span className="animate-bounce">🚀</span>
             <span>You receive</span>
           </div>
-          <div className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-green-500 rounded-lg flex items-center justify-between transition-all duration-300 ease-in-out transform hover:-translate-y-1 hover:shadow-xl hover:brightness-110">
+          <div className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-green-500 rounded-lg flex items-center justify-between">
             <span>MEGY</span>
             <span className="text-sm text-gray-400 ml-2">(Future of Money)</span>
           </div>
+        </div>
+
+        <div className="mt-6">
+          <WalletMultiButton className="!bg-cyan-600 hover:!bg-cyan-700" />
         </div>
       </div>
 
