@@ -8,7 +8,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import dynamic from 'next/dynamic';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import Image from 'next/image';
+import CoincarneConfirmModal from '@/components/CoincarneConfirmModal';
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
@@ -20,6 +20,11 @@ export default function Home() {
   const [endDate, setEndDate] = useState(null);
   const [timeLeft, setTimeLeft] = useState({});
   const [swapAnimationData, setSwapAnimationData] = useState(null);
+
+  // ✅ Modal kontrolü için state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedToken, setSelectedToken] = useState(null);
+  const [selectedAmount, setSelectedAmount] = useState(null);
 
   useEffect(() => {
     fetch('/animations/looping-swap.json')
@@ -101,10 +106,7 @@ export default function Home() {
           </div>
 
           {/* Swap Line */}
-          <div className="my-4 text-center text-white font-bold text-lg flex items-center justify-center space-x-2">
-            <Image src="/icons/swap-icon.png" width={24} height={24} alt="Swap" />
-            <span>Coincarnate</span>
-          </div>
+          <div className="my-4 text-center text-white font-bold text-lg">Coincarnate</div>
 
           {/* You receive */}
           <div className="text-sm text-gray-400 mb-1 text-left flex items-center space-x-2">
@@ -124,7 +126,11 @@ export default function Home() {
 
       {/* Coincarne Form */}
       <div className="mt-10 w-full max-w-2xl">
-        <CoincarneForm />
+        <CoincarneForm onSelectToken={(token, amount) => {
+          setSelectedToken(token);
+          setSelectedAmount(amount);
+          setModalOpen(true);
+        }} />
       </div>
 
       {/* Claim butonu */}
@@ -152,6 +158,14 @@ export default function Home() {
           ⏳ {timeLeft.days} days {timeLeft.hours}:{timeLeft.minutes?.toString().padStart(2, '0')}:{timeLeft.seconds?.toString().padStart(2, '0')} remaining...
         </div>
       )}
+
+      {/* Modal */}
+      <CoincarneConfirmModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        token={selectedToken}
+        amount={selectedAmount}
+      />
     </div>
   );
 }
