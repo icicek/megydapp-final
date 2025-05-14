@@ -8,6 +8,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import dynamic from 'next/dynamic';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import Image from 'next/image';
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
@@ -100,7 +101,10 @@ export default function Home() {
           </div>
 
           {/* Swap Line */}
-          <div className="my-4 text-center text-white font-bold text-lg">↔️ Coincarnate</div>
+          <div className="my-4 text-center text-white font-bold text-lg flex items-center justify-center space-x-2">
+            <Image src="/icons/swap-icon.png" width={24} height={24} alt="Swap" />
+            <span>Coincarnate</span>
+          </div>
 
           {/* You receive */}
           <div className="text-sm text-gray-400 mb-1 text-left flex items-center space-x-2">
