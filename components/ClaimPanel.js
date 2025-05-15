@@ -128,6 +128,7 @@ export default function ClaimPanel({ walletAddress }) {
                       <th className="py-2">Token</th>
                       <th className="py-2">Amount</th>
                       <th className="py-2">USD Value</th>
+<th className="py-2">Share</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -136,6 +137,16 @@ export default function ClaimPanel({ walletAddress }) {
                         <td className="py-2 text-white">{entry.token}</td>
                         <td className="py-2">{entry.amount}</td>
                         <td className="py-2 text-green-400">${entry.usd}</td>
+<td className="py-2">
+  <a
+    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`🚀 I just Coincarnated $${entry.token} worth $${entry.usd}! Join the Coincarnation revolution → https://megydapp.vercel.app`)}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-blue-400 hover:underline"
+  >
+    🐦 Share
+  </a>
+</td>
                       </tr>
                     ))}
                   </tbody>
