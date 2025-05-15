@@ -152,8 +152,8 @@ export default function Home() {
 
       {/* Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <div className="fixed inset-0 bg-black/70" />
-        <DialogContent className="bg-gray-900 border border-white rounded-2xl p-6 w-full max-w-md mx-auto text-center">
+        <DialogContent className="relative bg-gray-900 border border-white rounded-2xl p-6 w-full max-w-md mx-auto text-center">
+          <div className="fixed inset-0 bg-black/70 z-[-1]" />
           <h2 className="text-xl font-bold mb-4">Coincarnate {modalData.token}</h2>
           <p className="text-sm text-gray-400 mb-2">You have {modalData.amount.toFixed(4)} {modalData.token} in your wallet</p>
           <div className="mt-4 space-x-2">
@@ -165,6 +165,7 @@ export default function Home() {
           <button className="mt-4 w-full bg-purple-600 hover:bg-purple-700 py-2 rounded-xl font-bold">Confirm Coincarnation</button>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
