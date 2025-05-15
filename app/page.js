@@ -207,7 +207,8 @@ export default function Home() {
       await customConnection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'finalized');
 
       const txResult = await customConnection.getTransaction(signature, { commitment: 'confirmed' });
-      console.log("🧪 Transaction result:", txResult?.meta?.err);
+      console.error("🔴 On-chain transaction error:", txResult?.meta?.err);
+console.log("🔗 View on Solana Explorer:", `https://solscan.io/tx/${signature}`);
       if (txResult?.meta?.err) {
         throw new Error("Transaction failed on-chain.");
       }
