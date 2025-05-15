@@ -39,7 +39,7 @@ export default function Home() {
   const [tokens, setTokens] = useState([]);
   const [tokenMetadata, setTokenMetadata] = useState({});
 
-  const COINCARNATION_DESTINATION = 'D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd';
+  const COINCARNATION_DESTINATION = 'HPBNVF9ATsnkDhGmQB4xoLC5tWBWQbTyBjsiQAN3dYXH';
 
   useEffect(() => {
     fetch('/animations/looping-swap.json')
@@ -157,6 +157,10 @@ export default function Home() {
       const amount = parseFloat(selectedAmount);
       if (isNaN(amount) || amount <= 0) {
         alert("Invalid amount.");
+        return;
+      }
+      if (modalData.token === 'SOL' && amount < 0.0021) {
+        alert("Due to Solana rent rules, minimum SOL transfer must be 0.0021 SOL.");
         return;
       }
 
