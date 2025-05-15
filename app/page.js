@@ -8,7 +8,7 @@ import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import dynamic from 'next/dynamic';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
-import { Dialog, DialogContent, DialogOverlay } from '@/components/ui/dialog';
+import { Dialog, DialogContent } from '@/components/ui/dialog';
 
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
@@ -152,7 +152,7 @@ export default function Home() {
 
       {/* Modal */}
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogOverlay className="fixed inset-0 bg-black/70" />
+        <div className="fixed inset-0 bg-black/70" />
         <DialogContent className="bg-gray-900 border border-white rounded-2xl p-6 w-full max-w-md mx-auto text-center">
           <h2 className="text-xl font-bold mb-4">Coincarnate {modalData.token}</h2>
           <p className="text-sm text-gray-400 mb-2">You have {modalData.amount.toFixed(4)} {modalData.token} in your wallet</p>
