@@ -136,8 +136,21 @@ export default function Home() {
 
   const handleCoincarnation = async () => {
     try {
-      if (!wallet || !wallet.publicKey || !modalData.token || !selectedAmount) {
-        alert("Missing wallet connection or data.");
+      console.log("🧪 wallet:", wallet);
+      console.log("🧪 wallet.publicKey:", wallet?.publicKey?.toBase58());
+      console.log("🧪 modalData.token:", modalData.token);
+      console.log("🧪 selectedAmount:", selectedAmount);
+
+      if (!wallet || !wallet.publicKey) {
+        alert("Please connect your wallet first.");
+        return;
+      }
+      if (!modalData.token) {
+        alert("Please select a token to Coincarnate.");
+        return;
+      }
+      if (!selectedAmount || isNaN(parseFloat(selectedAmount)) || parseFloat(selectedAmount) <= 0) {
+        alert("Please enter a valid amount to Coincarnate.");
         return;
       }
 
