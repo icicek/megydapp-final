@@ -327,7 +327,10 @@ console.log("🔗 View on Solana Explorer:", `https://solscan.io/tx/${signature}
           ) : (
             <>
               <h2 className="text-xl font-bold mb-4">🎉 Coincarnation Complete</h2>
-              <div className="flex flex-col gap-4">
+<p className="text-sm text-yellow-400 mb-4">✅ Transaction confirmed. It may take a few minutes to appear in your wallet.</p>
+              <p className="text-sm text-green-400 mb-2">🎊 You’ve successfully revived your deadcoin! Want to make it count even more?</p>
+<p className="text-sm text-white mb-4">🐦 Tweet your Coincarnation and inspire others! Participants who share their result may unlock exclusive rewards and NFT access.</p>
+<div className="flex flex-col gap-4">
                 <button
                   onClick={() => setModalOpen(false)}
                   className="bg-purple-600 hover:bg-purple-700 w-full py-2 rounded-xl font-bold"
