@@ -137,8 +137,7 @@ export default function Home() {
 
   const handleCoincarnation = async () => {
     try {
-      console.log("🧪 wallet:", wallet);
-      console.log("🧪 publicKey:", wallet?.publicKey?.toBase58());
+      console.log("🧪 publicKey:", publicKey?.toBase58());
       console.log("🧪 modalData.token:", modalData.token);
       console.log("🧪 selectedAmount:", selectedAmount);
 
