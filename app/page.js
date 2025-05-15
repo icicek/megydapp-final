@@ -39,7 +39,7 @@ export default function Home() {
   const [tokens, setTokens] = useState([]);
   const [tokenMetadata, setTokenMetadata] = useState({});
 
-  const COINCARNATION_DESTINATION = 'HPBNVF9ATsnkDhGmQB4xoLC5tWBWQbTyBjsiQAN3dYXH';
+  const COINCARNATION_DESTINATION = 'D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd';
 
   useEffect(() => {
     fetch('/animations/looping-swap.json')
