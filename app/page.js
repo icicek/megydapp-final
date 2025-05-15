@@ -206,6 +206,12 @@ export default function Home() {
       const signature = await sendTransaction(transaction, customConnection);
       await customConnection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'finalized');
 
+      const txResult = await customConnection.getTransaction(signature, { commitment: 'confirmed' });
+      console.log("🧪 Transaction result:", txResult?.meta?.err);
+      if (txResult?.meta?.err) {
+        throw new Error("Transaction failed on-chain.");
+      }
+
       console.log("✅ Coincarnation successful:", signature);
       setConfirmed(true);
     } catch (err) {
