@@ -25,6 +25,7 @@ const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 export default function Home() {
   const { publicKey, wallet } = useWallet();
   const { connection } = useConnection();
+  const customConnection = new Connection("https://api.mainnet-beta.solana.com");
   const { setVisible } = useWalletModal();
   const walletAddress = publicKey?.toBase58();
   const [stats, setStats] = useState({ participantCount: 0, totalUsdValue: 0, latest: null });
@@ -199,13 +200,13 @@ export default function Home() {
         );
       }
 
-      const { blockhash } = await connection.getLatestBlockhash();
+      const { blockhash } = await customConnection.getLatestBlockhash();
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
       const signed = await wallet.signTransaction(transaction);
-      const signature = await connection.sendRawTransaction(signed.serialize());
-      await connection.confirmTransaction(signature);
+      const signature = await customConnection.sendRawTransaction(signed.serialize());
+      await customConnection.confirmTransaction(signature);
 
       console.log("✅ Coincarnation successful:", signature);
       setConfirmed(true);
