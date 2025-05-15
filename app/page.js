@@ -23,7 +23,7 @@ import {
 const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 
 export default function Home() {
-  const { publicKey, wallet } = useWallet();
+  const { publicKey, sendTransaction } = useWallet();
   const { connection } = useConnection();
   const customConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
   const { setVisible } = useWalletModal();
@@ -204,8 +204,7 @@ export default function Home() {
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
-      const signed = await wallet.signTransaction(transaction);
-      const signature = await customConnection.sendRawTransaction(signed.serialize());
+      const signature = await sendTransaction(transaction, customConnection);
       await customConnection.confirmTransaction(signature);
 
       console.log("✅ Coincarnation successful:", signature);
