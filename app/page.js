@@ -199,12 +199,12 @@ export default function Home() {
         );
       }
 
-      const { blockhash } = await customConnection.getLatestBlockhash();
+      const { blockhash, lastValidBlockHeight } = await customConnection.getLatestBlockhash();
       transaction.recentBlockhash = blockhash;
       transaction.feePayer = publicKey;
 
       const signature = await sendTransaction(transaction, customConnection);
-      await customConnection.confirmTransaction(signature);
+      await customConnection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'finalized');
 
       console.log("✅ Coincarnation successful:", signature);
       setConfirmed(true);
