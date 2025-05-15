@@ -137,11 +137,11 @@ export default function Home() {
   const handleCoincarnation = async () => {
     try {
       console.log("🧪 wallet:", wallet);
-      console.log("🧪 wallet.publicKey:", wallet?.publicKey?.toBase58());
+      console.log("🧪 publicKey:", wallet?.publicKey?.toBase58());
       console.log("🧪 modalData.token:", modalData.token);
       console.log("🧪 selectedAmount:", selectedAmount);
 
-      if (!wallet || !wallet.publicKey) {
+      if (!publicKey) {
         alert("Please connect your wallet first.");
         return;
       }
@@ -166,7 +166,7 @@ export default function Home() {
         const lamports = Math.floor(amount * 1e9);
         transaction.add(
           SystemProgram.transfer({
-            fromPubkey: wallet.publicKey,
+            fromPubkey: publicKey,
             toPubkey: new PublicKey(COINCARNATION_DESTINATION),
             lamports,
           })
@@ -180,7 +180,7 @@ export default function Home() {
 
         const sourceTokenAccount = await getAssociatedTokenAddress(
           new PublicKey(mintAddress),
-          wallet.publicKey
+          publicKey
         );
         const destinationTokenAccount = await getAssociatedTokenAddress(
           new PublicKey(mintAddress),
@@ -193,7 +193,7 @@ export default function Home() {
           createTransferInstruction(
             sourceTokenAccount,
             destinationTokenAccount,
-            wallet.publicKey,
+            publicKey,
             Math.floor(amount * 10 ** decimals)
           )
         );
@@ -201,7 +201,7 @@ export default function Home() {
 
       const { blockhash } = await connection.getLatestBlockhash();
       transaction.recentBlockhash = blockhash;
-      transaction.feePayer = wallet.publicKey;
+      transaction.feePayer = publicKey;
 
       const signed = await wallet.signTransaction(transaction);
       const signature = await connection.sendRawTransaction(signed.serialize());
