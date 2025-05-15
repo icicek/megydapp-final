@@ -202,5 +202,135 @@ export default function Home() {
     }
   };
 
-  // ... JSX kısmı değişmedi
+  return (
+    <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center text-center p-6">
+      <h1 className="text-4xl font-bold mb-4">🚀 Welcome to MEGY Coincarnation</h1>
+      <p className="mb-6 text-lg">The place where deadcoins come back stronger.</p>
+
+      <div className="text-lg font-medium mt-4 space-y-2">
+        <p>🎉 <CountUp key={stats.participantCount} end={stats.participantCount} duration={1.5} /> Coincarnators and counting...</p>
+        <p>💸 $<CountUp key={stats.totalUsdValue} end={stats.totalUsdValue} duration={1.5} decimals={2} /> worth of deadcoins revived.</p>
+      </div>
+
+      <div className="mt-10 w-full max-w-xl mx-auto px-4 animate-fade-in">
+        <div
+          onClick={() => setVisible(true)}
+          className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-6 shadow-xl cursor-pointer"
+        >
+          <div className="text-sm text-gray-400 mb-1 text-left flex items-center space-x-2">
+            <span className="animate-pulse">💀</span>
+            <span>You give</span>
+          </div>
+          <div className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-red-500 rounded-lg flex items-center justify-between">
+            <span>Walking Deadcoins</span>
+            <span className="text-sm text-gray-400 ml-2">(Memecoins, shitcoins...)</span>
+          </div>
+
+          <div className="my-4 text-center text-white font-bold text-lg">Coincarnate</div>
+
+          <div className="text-sm text-gray-400 mb-1 text-left flex items-center space-x-2">
+            <span className="animate-bounce">🚀</span>
+            <span>You receive</span>
+          </div>
+          <div className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-green-500 rounded-lg flex items-center justify-between">
+            <span>MEGY</span>
+            <span className="text-sm text-gray-400 ml-2">(Future of Money)</span>
+          </div>
+        </div>
+
+        <div className="mt-6">
+          <WalletMultiButton className="!bg-cyan-600 hover:!bg-cyan-700" />
+        </div>
+      </div>
+
+      <div className="mt-10 w-full max-w-2xl">
+        <CoincarneForm onSelectToken={handleTokenSelect} />
+      </div>
+
+      <div className="mt-8 flex justify-center">
+        <Link href={walletAddress ? '/claim' : '#'}>
+          <button
+            disabled={!walletAddress}
+            className={`px-6 py-3 text-lg font-bold rounded-xl transition-all duration-300 ${walletAddress ? 'bg-green-500 hover:bg-green-600 text-black' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}
+          >
+            🎯 Go to Profile
+          </button>
+        </Link>
+      </div>
+
+      {stats.latest && (
+        <div className="mt-6 text-sm text-gray-300">
+          🧑‍🚀 Latest: <span className="font-mono">{stats.latest.wallet}</span> revived <span className="font-bold">{stats.latest.token}</span>
+        </div>
+      )}
+
+      {!timeLeft.expired && endDate && (
+        <div className="mt-4 text-sm text-yellow-400">
+          ⏳ {timeLeft.days} days {timeLeft.hours}:{timeLeft.minutes?.toString().padStart(2, '0')}:{timeLeft.seconds?.toString().padStart(2, '0')} remaining...
+        </div>
+      )}
+
+      <Dialog open={modalOpen} onOpenChange={setModalOpen}>
+        <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900 border border-white rounded-2xl p-6 w-full max-w-md mx-auto text-center">
+          {!confirmed ? (
+            <>
+              <h2 className="text-xl font-bold mb-4">Coincarnate {modalData.token}</h2>
+              <p className="text-sm text-gray-400 mb-2">You have {modalData.amount.toFixed(4)} {modalData.token} in your wallet</p>
+              <div className="mt-4 space-x-2">
+                {[25, 50, 75, 100].map(pct => (
+                  <button
+                    key={pct}
+                    onClick={() => setSelectedAmount((modalData.amount * (pct / 100)).toFixed(4))}
+                    className="bg-gray-700 px-3 py-1 rounded text-white"
+                  >
+                    %{pct}
+                  </button>
+                ))}
+              </div>
+              <input
+                type="number"
+                value={selectedAmount}
+                onChange={(e) => setSelectedAmount(e.target.value)}
+                placeholder="Enter amount"
+                className="mt-4 w-full p-2 rounded bg-gray-800 border border-gray-600 text-white"
+              />
+              <button
+                onClick={handleCoincarnation}
+                className="mt-4 w-full bg-purple-600 hover:bg-purple-700 py-2 rounded-xl font-bold"
+              >
+                Confirm Coincarnation
+              </button>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-bold mb-4">🎉 Coincarnation Complete</h2>
+              <div className="flex flex-col gap-4">
+                <button
+                  onClick={() => setModalOpen(false)}
+                  className="bg-purple-600 hover:bg-purple-700 w-full py-2 rounded-xl font-bold"
+                >
+                  🔁 Recoincarnate
+                </button>
+                <Link href="/claim">
+                  <button className="bg-blue-600 hover:bg-blue-700 w-full py-2 rounded-xl font-bold">
+                    👤 Go to Profile
+                  </button>
+                </Link>
+                <a
+                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                    `🚀 Just Coincarnated my $${modalData.token} for $MEGY! #Coincarnation`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-2 px-4 rounded text-center"
+                >
+                  🐦 Share on X
+                </a>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
 }
