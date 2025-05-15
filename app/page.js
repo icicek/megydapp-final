@@ -25,7 +25,7 @@ const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
 export default function Home() {
   const { publicKey, wallet } = useWallet();
   const { connection } = useConnection();
-  const customConnection = new Connection("https://rpc.ankr.com/solana");
+  const customConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
   const { setVisible } = useWalletModal();
   const walletAddress = publicKey?.toBase58();
   const [stats, setStats] = useState({ participantCount: 0, totalUsdValue: 0, latest: null });
