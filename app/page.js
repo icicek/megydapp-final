@@ -38,10 +38,12 @@ export default function Home() {
   const [confirmed, setConfirmed] = useState(false);
   const [tokens, setTokens] = useState([]);
   const [tokenMetadata, setTokenMetadata] = useState({});
+  const [hasLastCoincarnation, setHasLastCoincarnation] = useState(false);
 
   const COINCARNATION_DESTINATION = 'D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd';
 
   useEffect(() => {
+  if (typeof window !== 'undefined') {
     const stored = localStorage.getItem("lastCoincarnation");
     if (stored) {
       try {
@@ -49,14 +51,16 @@ export default function Home() {
         if (parsed.token && parsed.amount) {
           setModalData({ token: parsed.token, amount: parseFloat(parsed.amount) });
           setConfirmed(true);
+          setHasLastCoincarnation(true);
           localStorage.removeItem("lastCoincarnation");
         }
       } catch (err) {
         console.error("Failed to parse lastCoincarnation from localStorage", err);
       }
     }
+  }
 
-    fetch('/animations/looping-swap.json')
+  fetch('/animations/looping-swap.json')
       .then(res => res.json())
       .then(data => setSwapAnimationData(data))
       .catch(err => console.error("Lottie animation fetch error:", err));
@@ -371,7 +375,7 @@ console.log("🔗 View on Solana Explorer:", `https://solscan.io/tx/${signature}
           )}
         </DialogContent>
       </Dialog>
-    {localStorage.getItem("lastCoincarnation") && (
+    {hasLastCoincarnation && (
         <button
           onClick={() => {
             const stored = localStorage.getItem("lastCoincarnation");
