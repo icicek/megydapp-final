@@ -138,7 +138,7 @@ export default function ClaimPanel({ walletAddress }) {
         </CardContent>
       </Card>
 
-      {data ? (
+      {data && (
         <>
           <Card className="bg-gray-800 border border-gray-700 shadow-md mb-6 w-full max-w-xl">
             <CardContent className="p-4 md:p-6">
@@ -147,42 +147,48 @@ export default function ClaimPanel({ walletAddress }) {
             </CardContent>
           </Card>
 
-          <Card className="bg-gray-800 border border-gray-700 shadow-md mb-6 w-full max-w-xl">
-            <CardContent className="p-4 md:p-6">
-              <p className="text-sm text-gray-400 mb-4">Your Contributions by Token</p>
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm text-left">
-                  <thead>
-                    <tr className="text-gray-400 border-b border-gray-600">
-                      <th className="py-2">Token</th>
-                      <th className="py-2">Amount</th>
-                      <th className="py-2">USD Value</th>
-                      <th className="py-2">Share</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.contributions.map((entry, index) => (
-                      <tr key={index} className="border-b border-gray-700">
-                        <td className="py-2 text-white">{entry.token}</td>
-                        <td className="py-2">{entry.amount}</td>
-                        <td className="py-2 text-green-400">${entry.usd}</td>
-                        <td className="py-2">
-                          <a
-                            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`🚀 I just Coincarnated $${entry.token} worth $${entry.usd}! Join the Coincarnation revolution → https://megydapp.vercel.app`)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-400 hover:underline"
-                          >
-                            🐦 Share
-                          </a>
-                        </td>
+          {contributionList.length > 0 && (
+            <Card className="bg-gray-800 border border-gray-700 shadow-md mb-6 w-full max-w-4xl">
+              <CardContent className="p-4 md:p-6">
+                <p className="text-sm text-gray-400 mb-4 font-medium">Your Individual Coincarnation Transactions</p>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm text-left">
+                    <thead>
+                      <tr className="text-gray-400 border-b border-gray-600">
+                        <th className="py-2 px-2">Token</th>
+                        <th className="py-2 px-2">Amount</th>
+                        <th className="py-2 px-2">USD</th>
+                        <th className="py-2 px-2">Date</th>
+                        <th className="py-2 px-2">Tweet</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+                    </thead>
+                    <tbody>
+                      {contributionList.map((entry, index) => (
+                        <tr key={index} className="border-b border-gray-700">
+                          <td className="py-2 px-2 text-white">${entry.token_symbol}</td>
+                          <td className="py-2 px-2">{Number(entry.token_amount).toLocaleString()}</td>
+                          <td className="py-2 px-2 text-green-400">${Number(entry.usd_value).toFixed(2)}</td>
+                          <td className="py-2 px-2 text-gray-400">{new Date(entry.timestamp).toLocaleString()}</td>
+                          <td className="py-2 px-2">
+                            <a
+                              href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                                `🚀 I just Coincarnated ${Number(entry.token_amount).toLocaleString()} $${entry.token_symbol} worth $${Number(entry.usd_value).toFixed(2)} into $MEGY!\n💀 Dead no more — it's time for rebirth.\n🔥 #Coincarnation is here: https://megydapp.vercel.app`
+                              )}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:underline"
+                            >
+                              🐦 Tweetle
+                            </a>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="w-full max-w-xl mb-8 text-white text-sm space-y-6">
             <div className="bg-gray-800 p-4 rounded-xl border border-gray-700 shadow">
@@ -206,49 +212,6 @@ export default function ClaimPanel({ walletAddress }) {
             <p className="text-yellow-400 text-sm pl-1">
               ⚠️ You will be charged a 0.5 USD fee in SOL during claim.
             </p>
-
-            {contributionList.length > 0 && (
-              <Card className="bg-gray-800 border border-gray-700 shadow-md mb-6 w-full max-w-4xl">
-                <CardContent className="p-4 md:p-6">
-                  <p className="text-sm text-gray-400 mb-4 font-medium">Your Individual Coincarnation Transactions</p>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full text-sm text-left">
-                      <thead>
-                        <tr className="text-gray-400 border-b border-gray-600">
-                          <th className="py-2 px-2">Token</th>
-                          <th className="py-2 px-2">Amount</th>
-                          <th className="py-2 px-2">USD</th>
-                          <th className="py-2 px-2">Date</th>
-                          <th className="py-2 px-2">Tweet</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {contributionList.map((entry, index) => (
-                          <tr key={index} className="border-b border-gray-700">
-                            <td className="py-2 px-2 text-white">${entry.token_symbol}</td>
-                            <td className="py-2 px-2">{Number(entry.token_amount).toLocaleString()}</td>
-                            <td className="py-2 px-2 text-green-400">${Number(entry.usd_value).toFixed(2)}</td>
-                            <td className="py-2 px-2 text-gray-400">{new Date(entry.timestamp).toLocaleString()}</td>
-                            <td className="py-2 px-2">
-                              <a
-                                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                                  `🚀 I just Coincarnated ${Number(entry.token_amount).toLocaleString()} $${entry.token_symbol} worth $${Number(entry.usd_value).toFixed(2)} into $MEGY!\n💀 Dead no more — it's time for rebirth.\n🔥 #Coincarnation is here: https://megydapp.vercel.app`
-                                )}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-blue-400 hover:underline"
-                              >
-                                🐦 Tweetle
-                              </a>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
           </div>
 
           <div className="flex flex-col md:flex-row md:gap-4 w-full max-w-xl">
@@ -294,11 +257,6 @@ export default function ClaimPanel({ walletAddress }) {
             )}
           </div>
         </>
-      ) : (
-        <div className="text-center text-gray-300 mt-20">
-          <p className="text-xl font-semibold">🕵️ You haven’t participated yet...</p>
-          <p className="mt-2 text-sm">Global participants: {globalStats?.totalWallets || 0} | Total Value: ${globalStats?.totalUSD || 0}</p>
-        </div>
       )}
 
       <div className="text-center mt-12">
