@@ -15,6 +15,7 @@ export default function CoincarneForm({ onSelectToken }) {
   const [walletAddress, setWalletAddress] = useState(null);
   const [tokens, setTokens] = useState([]);
   const [tokenMetadata, setTokenMetadata] = useState({});
+  const [selectedToken, setSelectedToken] = useState(null);
 
   useEffect(() => {
     fetchTokenList();
@@ -89,6 +90,32 @@ export default function CoincarneForm({ onSelectToken }) {
     return meta?.symbol || meta?.name || mint.slice(0, 4) + '...' + mint.slice(-4);
   };
 
+  const handleTransfer = async () => {
+    if (!selectedToken || !walletAddress) return;
+    try {
+      const res = await fetch("/api/coincarnation/transfer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          wallet_address: walletAddress,
+          mint: selectedToken.mint,
+          amount: selectedToken.amount,
+          usd_value: 0,
+          referral_code: null,
+          user_agent: navigator.userAgent,
+        }),
+      });
+      const json = await res.json();
+      if (json.transaction) {
+        console.log("✅ Transaction prepared:", json.transaction);
+      } else {
+        console.error("❌ Transfer API response:", json);
+      }
+    } catch (err) {
+      console.error("❌ Transfer error:", err);
+    }
+  };
+
   return (
     <div className="text-white mt-4 space-y-6 text-center">
       <div className="relative max-w-md mx-auto">
@@ -96,9 +123,10 @@ export default function CoincarneForm({ onSelectToken }) {
           className="w-full p-3 bg-gray-800 border border-red-500 rounded text-white"
           onChange={(e) => {
             const selected = tokens.find(t => t.mint === e.target.value);
-            if (selected && onSelectToken) {
+            if (selected) {
+              setSelectedToken(selected);
               const symbol = metaName(selected.mint);
-              onSelectToken(symbol, selected.amount);
+              if (onSelectToken) onSelectToken(symbol, selected.amount);
             }
           }}
         >
@@ -109,6 +137,14 @@ export default function CoincarneForm({ onSelectToken }) {
             </option>
           ))}
         </select>
+        {selectedToken && (
+          <button
+            className="mt-4 px-4 py-2 bg-green-600 rounded hover:bg-green-700"
+            onClick={handleTransfer}
+          >
+            🚀 Coincarne Now
+          </button>
+        )}
       </div>
     </div>
   );
