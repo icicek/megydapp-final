@@ -6,7 +6,8 @@ import {
 } from "@solana/spl-token";
 import { neon } from "@neondatabase/serverless";
 import tokenMap from "@/data/token-map.json";
-export const runtime = 'nodejs';
+
+export const runtime = 'nodejs'; // 🧠 Mutlaka burada olmalı
 
 const RPC_ENDPOINT = "https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c";
 const DESTINATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd";
@@ -15,9 +16,17 @@ const sql = neon(process.env.DATABASE_URL);
 
 export async function POST(req) {
   try {
-    const { wallet_address, mint, amount, usd_value = 0, referral_code = null, user_agent = null } = await req.json();
+    const {
+      wallet_address,
+      mint,
+      amount,
+      usd_value = 0,
+      referral_code = null,
+      user_agent = null,
+    } = await req.json();
 
     if (!wallet_address || !mint || !amount) {
+      console.warn("⚠️ Missing required fields", { wallet_address, mint, amount });
       return Response.json({ error: "Missing required fields." }, { status: 400 });
     }
 
@@ -70,7 +79,16 @@ export async function POST(req) {
       );
     }
 
-    // ✅ Write to Neon DB
+    // 🔍 DEBUG: Veritabanına yazılmadan önce log
+    console.log("📥 Writing to Neon contributions table:", {
+      wallet_address,
+      tokenSymbol,
+      token_contract: mint,
+      network: 'solana',
+      tokenAmount,
+      usd_value,
+    });
+
     await sql`
       INSERT INTO contributions (
         wallet_address,
@@ -96,6 +114,8 @@ export async function POST(req) {
         NOW()
       )
     `;
+
+    console.log("✅ Successfully inserted into Neon DB");
 
     const serialized = transaction.serialize({ requireAllSignatures: false });
     const base64Tx = serialized.toString("base64");
