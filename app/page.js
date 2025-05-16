@@ -42,6 +42,20 @@ export default function Home() {
   const COINCARNATION_DESTINATION = 'D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd';
 
   useEffect(() => {
+    const stored = localStorage.getItem("lastCoincarnation");
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        if (parsed.token && parsed.amount) {
+          setModalData({ token: parsed.token, amount: parseFloat(parsed.amount) });
+          setConfirmed(true);
+          localStorage.removeItem("lastCoincarnation");
+        }
+      } catch (err) {
+        console.error("Failed to parse lastCoincarnation from localStorage", err);
+      }
+    }
+
     fetch('/animations/looping-swap.json')
       .then(res => res.json())
       .then(data => setSwapAnimationData(data))
@@ -357,6 +371,28 @@ console.log("🔗 View on Solana Explorer:", `https://solscan.io/tx/${signature}
           )}
         </DialogContent>
       </Dialog>
+    {localStorage.getItem("lastCoincarnation") && (
+        <button
+          onClick={() => {
+            const stored = localStorage.getItem("lastCoincarnation");
+            if (stored) {
+              try {
+                const parsed = JSON.parse(stored);
+                if (parsed.token && parsed.amount) {
+                  setModalData({ token: parsed.token, amount: parseFloat(parsed.amount) });
+                  setConfirmed(true);
+                  localStorage.removeItem("lastCoincarnation");
+                }
+              } catch (err) {
+                console.error("Failed to parse lastCoincarnation", err);
+              }
+            }
+          }}
+          className="mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-3 rounded-xl"
+        >
+          🔁 Show Last Coincarnation
+        </button>
+      )}
     </div>
   );
 }

@@ -12,6 +12,7 @@ export default function ClaimPanel({ walletAddress }) {
   const [isLoading, setIsLoading] = useState(false);
   const [globalStats, setGlobalStats] = useState(null);
   const [megyAmount, setMegyAmount] = useState(0);
+  const [recentCoincarnation, setRecentCoincarnation] = useState(null);
 
   useEffect(() => {
     const loadData = async () => {
@@ -40,6 +41,13 @@ export default function ClaimPanel({ walletAddress }) {
       }
     };
     fetchClaimStatus();
+  }, []);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("lastCoincarnation");
+    if (stored) {
+      setRecentCoincarnation(JSON.parse(stored));
+    }
   }, []);
 
   useEffect(() => {
@@ -239,6 +247,13 @@ export default function ClaimPanel({ walletAddress }) {
           </Button>
         </Link>
       </div>
+    {recentCoincarnation && (
+        <Link href="/">
+          <Button className="mt-6 bg-purple-500 hover:bg-purple-600 text-white font-bold px-6 py-3 rounded-xl">
+            🔁 Show Last Coincarnation
+          </Button>
+        </Link>
+      )}
     </div>
   );
 }
