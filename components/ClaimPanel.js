@@ -13,6 +13,7 @@ export default function ClaimPanel({ walletAddress }) {
   const [globalStats, setGlobalStats] = useState(null);
   const [megyAmount, setMegyAmount] = useState(0);
   const [recentCoincarnation, setRecentCoincarnation] = useState(null);
+  const [contributionList, setContributionList] = useState([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -62,6 +63,26 @@ export default function ClaimPanel({ walletAddress }) {
     };
     fetchStats();
   }, []);
+
+  useEffect(() => {
+    const fetchContributions = async () => {
+      if (!walletAddress) return;
+      try {
+        const res = await fetch('/api/contributions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ wallet: walletAddress }),
+        });
+        const json = await res.json();
+        if (json.success) {
+          setContributionList(json.contributions);
+        }
+      } catch (err) {
+        console.error('Failed to fetch contributions list:', err);
+      }
+    };
+    fetchContributions();
+  }, [walletAddress]);
 
   useEffect(() => {
     if (data && globalStats?.totalUSD) {
@@ -136,7 +157,7 @@ export default function ClaimPanel({ walletAddress }) {
                       <th className="py-2">Token</th>
                       <th className="py-2">Amount</th>
                       <th className="py-2">USD Value</th>
-<th className="py-2">Share</th>
+                      <th className="py-2">Share</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -145,16 +166,16 @@ export default function ClaimPanel({ walletAddress }) {
                         <td className="py-2 text-white">{entry.token}</td>
                         <td className="py-2">{entry.amount}</td>
                         <td className="py-2 text-green-400">${entry.usd}</td>
-<td className="py-2">
-  <a
-    href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`🚀 I just Coincarnated $${entry.token} worth $${entry.usd}! Join the Coincarnation revolution → https://megydapp.vercel.app`)}`}
-    target="_blank"
-    rel="noopener noreferrer"
-    className="text-blue-400 hover:underline"
-  >
-    🐦 Share
-  </a>
-</td>
+                        <td className="py-2">
+                          <a
+                            href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(`🚀 I just Coincarnated $${entry.token} worth $${entry.usd}! Join the Coincarnation revolution → https://megydapp.vercel.app`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-400 hover:underline"
+                          >
+                            🐦 Share
+                          </a>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -185,6 +206,49 @@ export default function ClaimPanel({ walletAddress }) {
             <p className="text-yellow-400 text-sm pl-1">
               ⚠️ You will be charged a 0.5 USD fee in SOL during claim.
             </p>
+
+            {contributionList.length > 0 && (
+              <Card className="bg-gray-800 border border-gray-700 shadow-md mb-6 w-full max-w-4xl">
+                <CardContent className="p-4 md:p-6">
+                  <p className="text-sm text-gray-400 mb-4 font-medium">Your Individual Coincarnation Transactions</p>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full text-sm text-left">
+                      <thead>
+                        <tr className="text-gray-400 border-b border-gray-600">
+                          <th className="py-2 px-2">Token</th>
+                          <th className="py-2 px-2">Amount</th>
+                          <th className="py-2 px-2">USD</th>
+                          <th className="py-2 px-2">Date</th>
+                          <th className="py-2 px-2">Tweet</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {contributionList.map((entry, index) => (
+                          <tr key={index} className="border-b border-gray-700">
+                            <td className="py-2 px-2 text-white">${entry.token_symbol}</td>
+                            <td className="py-2 px-2">{Number(entry.token_amount).toLocaleString()}</td>
+                            <td className="py-2 px-2 text-green-400">${Number(entry.usd_value).toFixed(2)}</td>
+                            <td className="py-2 px-2 text-gray-400">{new Date(entry.timestamp).toLocaleString()}</td>
+                            <td className="py-2 px-2">
+                              <a
+                                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
+                                  `🚀 I just Coincarnated ${Number(entry.token_amount).toLocaleString()} $${entry.token_symbol} worth $${Number(entry.usd_value).toFixed(2)} into $MEGY!\n💀 Dead no more — it's time for rebirth.\n🔥 #Coincarnation is here: https://megydapp.vercel.app`
+                                )}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-400 hover:underline"
+                              >
+                                🐦 Tweetle
+                              </a>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           <div className="flex flex-col md:flex-row md:gap-4 w-full max-w-xl">
@@ -219,10 +283,7 @@ export default function ClaimPanel({ walletAddress }) {
                 href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
                   `🚀 I just earned ${megyAmount.toLocaleString()} $MEGY and joined the top ${(
                     (data.total_usd / globalStats.totalUSD) * 100
-                  ).toFixed(2)}%!
-\n\n💥 Coincarnator #${data.coincarnator_no} reporting in.\n\n🔗 https://megydapp.vercel.app`
-                )}&url=${encodeURIComponent(
-                  `https://megydapp.vercel.app/share/${data.coincarnator_no}`
+                  ).toFixed(2)}%!\n\n💥 Coincarnator #${data.coincarnator_no} reporting in.\n\n🔗 https://megydapp.vercel.app`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -247,7 +308,8 @@ export default function ClaimPanel({ walletAddress }) {
           </Button>
         </Link>
       </div>
-    {recentCoincarnation && (
+
+      {recentCoincarnation && (
         <Link href="/">
           <Button className="mt-6 bg-purple-500 hover:bg-purple-600 text-white font-bold px-6 py-3 rounded-xl">
             🔁 Show Last Coincarnation
