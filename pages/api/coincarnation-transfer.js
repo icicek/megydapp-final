@@ -1,4 +1,5 @@
 // ✅ pages/api/coincarnation-transfer.js
+console.log("🌐 DATABASE_URL:", process.env.DATABASE_URL);
 
 import { Connection, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import {
