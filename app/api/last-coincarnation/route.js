@@ -1,6 +1,8 @@
 'use server';
 
-import { sql } from '@vercel/postgres';
+import { neon } from '@neondatabase/serverless'; // ✅ Doğru kullanım
+const sql = neon(process.env.DATABASE_URL);
+
 import { NextResponse } from 'next/server';
 
 export async function GET(req) {
