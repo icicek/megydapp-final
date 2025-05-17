@@ -90,7 +90,13 @@ export async function POST(req) {
       tokenAmount,
       usd_value,
     });
-
+    
+    console.log("📥 Attempting Neon insert...", {
+      wallet_address,
+      mint,
+      amount
+    });
+    
     await sql`
       INSERT INTO contributions (
         wallet_address,

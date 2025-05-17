@@ -43,28 +43,41 @@ export default function Home() {
   const COINCARNATION_DESTINATION = 'D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd';
 
   useEffect(() => {
-  if (typeof window !== 'undefined') {
-    const stored = localStorage.getItem("lastCoincarnation");
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored);
-        if (parsed.token && parsed.amount) {
-          setModalData({ token: parsed.token, amount: parseFloat(parsed.amount) });
-          setConfirmed(true);
-          setHasLastCoincarnation(true);
-          localStorage.removeItem("lastCoincarnation");
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem("lastCoincarnation");
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed.token && parsed.amount) {
+            setModalData({ token: parsed.token, amount: parseFloat(parsed.amount) });
+            setConfirmed(true);
+            setHasLastCoincarnation(true);
+            localStorage.removeItem("lastCoincarnation");
+          }
+        } catch (err) {
+          console.error("Failed to parse lastCoincarnation from localStorage", err);
         }
-      } catch (err) {
-        console.error("Failed to parse lastCoincarnation from localStorage", err);
+      } else if (walletAddress) {
+        fetch(`/api/last-coincarnation?wallet=${walletAddress}`)
+          .then(res => res.json())
+          .then(data => {
+            if (data.success) {
+              setModalData({ token: data.token, amount: parseFloat(data.amount) });
+              setConfirmed(true);
+              setHasLastCoincarnation(true);
+            }
+          })
+          .catch(err => {
+            console.error("Failed to fetch lastCoincarnation from Neon", err);
+          });
       }
     }
-  }
 
-  fetch('/animations/looping-swap.json')
-      .then(res => res.json())
-      .then(data => setSwapAnimationData(data))
-      .catch(err => console.error("Lottie animation fetch error:", err));
-  }, []);
+    fetch('/animations/looping-swap.json')
+        .then(res => res.json())
+        .then(data => setSwapAnimationData(data))
+        .catch(err => console.error("Lottie animation fetch error:", err));
+  }, [walletAddress]);
 
   useEffect(() => {
     const fetchStats = async () => {
