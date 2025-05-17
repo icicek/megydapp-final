@@ -13,7 +13,7 @@ export default function CoincarnationResult({ tokenFrom, number, imageUrl, walle
 
   const handleSubmit = async () => {
     try {
-      const res = await fetch('/api/tweet-submission', {
+      const res = await fetch("/api/coincarnation-transfer", {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
