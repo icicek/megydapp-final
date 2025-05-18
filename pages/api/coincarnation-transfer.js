@@ -91,7 +91,8 @@ export default async function handler(req, res) {
       tokenAmount,
       usd_value,
     });
-
+  try {
+    console.log("🔥 BEFORE Neon insert");
     await sql`
       INSERT INTO contributions (
         wallet_address,
@@ -117,9 +118,11 @@ export default async function handler(req, res) {
         NOW()
       )
     `;
-
     console.log("✅ Neon insert başarıyla gerçekleşti!");
-
+  } catch (insertError) {
+    console.error("❌ Neon insert HATASI:", insertError);
+  }
+  
     const serialized = transaction.serialize({ requireAllSignatures: false });
     const base64Tx = serialized.toString("base64");
 
