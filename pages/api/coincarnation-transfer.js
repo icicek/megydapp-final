@@ -1,5 +1,5 @@
 // ✅ pages/api/coincarnation-transfer.js
-console.log("🌐 DATABASE_URL:", process.env.DATABASE_URL);
+console.log("✅ /api/coincarnation-transfer çalıştı!");
 
 import { Connection, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import {
@@ -13,19 +13,10 @@ import tokenMap from "@/data/token-map.json";
 const RPC_ENDPOINT = "https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c";
 const DESTINATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd";
 const connection = new Connection(RPC_ENDPOINT, "confirmed");
-const sql = neon(process.env.DATABASE_URL);
-
-// Fiyat verisi için geçici fiyat haritası (CoinGecko API yerine şimdilik statik değerler)
-const PRICE_MAP = {
-  SOL: 145.0,
-  FARTCOIN: 0.000032,
-  SOFAC: 0.00074,
-  EGG: 0.0075,
-  NEVER: 0.0012,
-};
 
 export default async function handler(req, res) {
-  console.log("✅ /api/coincarnation-transfer çalıştı!");
+  console.log("🌐 DATABASE_URL:", process.env.DATABASE_URL);
+  const sql = neon(process.env.DATABASE_URL);
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -36,6 +27,7 @@ export default async function handler(req, res) {
       wallet_address,
       mint,
       amount,
+      usd_value = 0,
       referral_code = null,
       user_agent = null,
     } = req.body;
@@ -52,17 +44,18 @@ export default async function handler(req, res) {
 
     let tokenSymbol = tokenMap[mint] || "UNKNOWN";
     let decimals = 9;
-    let tokenAmount = 0;
-    let usdValue = 0;
+    let tokenAmount = parseFloat(amount); // 🔄 Kullanıcı arayüzündeki miktar yazılır
     let transaction_signature = "PENDING";
 
     if (mint === "SOL") {
       tokenSymbol = "SOL";
-      const lamports = Math.floor(parseFloat(amount) * 1e9);
-      tokenAmount = lamports / 1e9;
-      usdValue = tokenAmount * (PRICE_MAP[tokenSymbol] || 0);
+      const lamports = Math.floor(tokenAmount * 1e9);
       transaction.add(
-        SystemProgram.transfer({ fromPubkey, toPubkey, lamports })
+        SystemProgram.transfer({
+          fromPubkey,
+          toPubkey,
+          lamports,
+        })
       );
     } else {
       const mintPubkey = new PublicKey(mint);
@@ -77,9 +70,7 @@ export default async function handler(req, res) {
       }
 
       const multiplier = 10 ** decimals;
-      tokenAmount = parseFloat(amount);
       const rawAmount = BigInt((tokenAmount * multiplier).toFixed(0));
-      usdValue = tokenAmount * (PRICE_MAP[tokenSymbol] || 0);
 
       transaction.add(
         createTransferInstruction(
@@ -93,12 +84,12 @@ export default async function handler(req, res) {
       );
     }
 
-    console.log("📥 Writing to Neon contributions table...", {
+    console.log("📥 INSERT verisi:", {
       wallet_address,
       tokenSymbol,
-      mint,
+      token_contract: mint,
       tokenAmount,
-      usdValue,
+      usd_value,
     });
 
     await sql`
@@ -119,13 +110,14 @@ export default async function handler(req, res) {
         ${mint},
         'solana',
         ${tokenAmount},
-        ${usdValue},
+        ${usd_value},
         ${transaction_signature},
         ${referral_code},
         ${user_agent},
         NOW()
       )
     `;
+
     console.log("✅ Neon insert başarıyla gerçekleşti!");
 
     const serialized = transaction.serialize({ requireAllSignatures: false });
