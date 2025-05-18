@@ -2,20 +2,21 @@
 
 import React, { useEffect, useState } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
-import { Connection } from "@solana/web3.js";
+import { Connection, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 const rpcConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
 const TOKEN_LIST_URL = "https://cdn.jsdelivr.net/gh/solana-labs/token-list@main/src/tokens/solana.tokenlist.json";
 
 export default function CoincarneForm({ onSelectToken }) {
-  const { publicKey, connected } = useWallet();
+  const { publicKey, connected, signAndSendTransaction } = useWallet();
   const { connection } = useConnection();
 
   const [walletAddress, setWalletAddress] = useState(null);
   const [tokens, setTokens] = useState([]);
   const [tokenMetadata, setTokenMetadata] = useState({});
   const [selectedToken, setSelectedToken] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     fetchTokenList();
@@ -92,6 +93,7 @@ export default function CoincarneForm({ onSelectToken }) {
 
   const handleTransfer = async () => {
     if (!selectedToken || !walletAddress) return;
+    setLoading(true);
     try {
       const res = await fetch("/api/coincarnation-transfer", {
         method: "POST",
@@ -105,14 +107,22 @@ export default function CoincarneForm({ onSelectToken }) {
           user_agent: navigator.userAgent,
         }),
       });
+
       const json = await res.json();
       if (json.transaction) {
-        console.log("✅ Transaction prepared:", json.transaction);
+        const transaction = Transaction.from(Buffer.from(json.transaction, "base64"));
+        const txSig = await signAndSendTransaction(transaction);
+        console.log("✅ Transaction sent:", txSig);
+        alert("✅ Transaction sent to Solana network!");
       } else {
         console.error("❌ Transfer API response:", json);
+        alert("❌ Transaction preparation failed.");
       }
     } catch (err) {
       console.error("❌ Transfer error:", err);
+      alert("❌ Error occurred during transfer.");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -129,20 +139,23 @@ export default function CoincarneForm({ onSelectToken }) {
               if (onSelectToken) onSelectToken(symbol, selected.amount);
             }
           }}
+          defaultValue=""
         >
-          <option value="" disabled selected>Select a token to coincarnate</option>
+          <option value="" disabled>Select a token to coincarnate</option>
           {tokens.map(token => (
             <option key={token.mint} value={token.mint}>
               {metaName(token.mint)} ({token.amount.toFixed(4)})
             </option>
           ))}
         </select>
+
         {selectedToken && (
           <button
-            className="mt-4 px-4 py-2 bg-green-600 rounded hover:bg-green-700"
+            className="mt-4 px-4 py-2 bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
             onClick={handleTransfer}
+            disabled={loading}
           >
-            🚀 Coincarne Now
+            {loading ? "⏳ Sending..." : "🚀 Coincarne Now"}
           </button>
         )}
       </div>
