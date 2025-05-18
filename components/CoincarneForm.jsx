@@ -107,12 +107,10 @@ export default function CoincarneForm({ onSelectToken }) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           wallet_address: walletAddress,
-          token_symbol: metaName(selectedToken.mint),
-          token_contract: selectedToken.mint,
-          network: "solana",
-          token_amount: selectedToken.amount,
+          mint: selectedToken.mint,
+          amount: selectedToken.amount,
           usd_value: 0,
-          transaction_signature: "",
+          referral_code: null,
           user_agent: navigator.userAgent,
         }),
       });
