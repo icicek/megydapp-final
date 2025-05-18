@@ -12,7 +12,7 @@ export default async function handler(req, res) {
   try {
     console.log("📡 Calling Neon for last contribution:", wallet);
 
-    const { rows } = await sql`
+    const result = await sql`
       SELECT token_symbol, token_amount, timestamp
       FROM contributions
       WHERE wallet_address = ${wallet}
