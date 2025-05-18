@@ -92,30 +92,41 @@ export default function CoincarneForm({ onSelectToken }) {
   };
 
   const handleTransfer = async () => {
-    if (!selectedToken || !walletAddress) return;
+    if (!selectedToken || !walletAddress) {
+      console.warn("⚠️ Missing selectedToken or walletAddress");
+      return;
+    }
+
     setLoading(true);
+    console.log("🔥 handleTransfer started");
+    console.log("🧠 Selected Token:", selectedToken);
+
     try {
       const res = await fetch("/api/coincarnation-transfer", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           wallet_address: walletAddress,
-          mint: selectedToken.mint,
-          amount: selectedToken.amount,
+          token_symbol: metaName(selectedToken.mint),
+          token_contract: selectedToken.mint,
+          network: "solana",
+          token_amount: selectedToken.amount,
           usd_value: 0,
-          referral_code: null,
+          transaction_signature: "",
           user_agent: navigator.userAgent,
         }),
       });
 
       const json = await res.json();
+      console.log("📬 API Response:", json);
+
       if (json.transaction) {
         const transaction = Transaction.from(Buffer.from(json.transaction, "base64"));
         const txSig = await signAndSendTransaction(transaction);
         console.log("✅ Transaction sent:", txSig);
         alert("✅ Transaction sent to Solana network!");
       } else {
-        console.error("❌ Transfer API response:", json);
+        console.error("❌ Transfer API failed:", json);
         alert("❌ Transaction preparation failed.");
       }
     } catch (err) {
@@ -152,7 +163,10 @@ export default function CoincarneForm({ onSelectToken }) {
         {selectedToken && (
           <button
             className="mt-4 px-4 py-2 bg-green-600 rounded hover:bg-green-700 disabled:opacity-50"
-            onClick={handleTransfer}
+            onClick={() => {
+              console.log("🚀 Coincarne button clicked");
+              handleTransfer();
+            }}
             disabled={loading}
           >
             {loading ? "⏳ Sending..." : "🚀 Coincarne Now"}

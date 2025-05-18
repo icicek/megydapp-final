@@ -14,6 +14,11 @@ const RPC_ENDPOINT = "https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db
 const DESTINATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd";
 const connection = new Connection(RPC_ENDPOINT, "confirmed");
 
+export default function handler(req, res) {
+  console.log("✅ API çağrısı geldi");
+  res.status(200).json({ success: true, message: "API çalışıyor!" });
+}
+
 export default async function handler(req, res) {
   console.log("🌐 DATABASE_URL:", process.env.DATABASE_URL);
   const sql = neon(process.env.DATABASE_URL);
@@ -122,7 +127,7 @@ export default async function handler(req, res) {
   } catch (insertError) {
     console.error("❌ Neon insert HATASI:", insertError);
   }
-  
+
     const serialized = transaction.serialize({ requireAllSignatures: false });
     const base64Tx = serialized.toString("base64");
 
