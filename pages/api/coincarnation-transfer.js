@@ -14,11 +14,6 @@ const RPC_ENDPOINT = "https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db
 const DESTINATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd";
 const connection = new Connection(RPC_ENDPOINT, "confirmed");
 
-export default function handler(req, res) {
-  console.log("✅ API çağrısı geldi");
-  res.status(200).json({ success: true, message: "API çalışıyor!" });
-}
-
 export default async function handler(req, res) {
   console.log("🌐 DATABASE_URL:", process.env.DATABASE_URL);
   const sql = neon(process.env.DATABASE_URL);
@@ -49,7 +44,7 @@ export default async function handler(req, res) {
 
     let tokenSymbol = tokenMap[mint] || "UNKNOWN";
     let decimals = 9;
-    let tokenAmount = parseFloat(amount); // 🔄 Kullanıcı arayüzündeki miktar yazılır
+    let tokenAmount = parseFloat(amount);
     let transaction_signature = "PENDING";
 
     if (mint === "SOL") {
@@ -96,37 +91,38 @@ export default async function handler(req, res) {
       tokenAmount,
       usd_value,
     });
-  try {
-    console.log("🔥 BEFORE Neon insert");
-    await sql`
-      INSERT INTO contributions (
-        wallet_address,
-        token_symbol,
-        token_contract,
-        network,
-        token_amount,
-        usd_value,
-        transaction_signature,
-        referral_code,
-        user_agent,
-        timestamp
-      ) VALUES (
-        ${wallet_address},
-        ${tokenSymbol},
-        ${mint},
-        'solana',
-        ${tokenAmount},
-        ${usd_value},
-        ${transaction_signature},
-        ${referral_code},
-        ${user_agent},
-        NOW()
-      )
-    `;
-    console.log("✅ Neon insert başarıyla gerçekleşti!");
-  } catch (insertError) {
-    console.error("❌ Neon insert HATASI:", insertError);
-  }
+
+    try {
+      console.log("🔥 BEFORE Neon insert");
+      await sql`
+        INSERT INTO contributions (
+          wallet_address,
+          token_symbol,
+          token_contract,
+          network,
+          token_amount,
+          usd_value,
+          transaction_signature,
+          referral_code,
+          user_agent,
+          timestamp
+        ) VALUES (
+          ${wallet_address},
+          ${tokenSymbol},
+          ${mint},
+          'solana',
+          ${tokenAmount},
+          ${usd_value},
+          ${transaction_signature},
+          ${referral_code},
+          ${user_agent},
+          NOW()
+        )
+      `;
+      console.log("✅ Neon insert başarıyla gerçekleşti!");
+    } catch (insertError) {
+      console.error("❌ Neon insert HATASI:", insertError);
+    }
 
     const serialized = transaction.serialize({ requireAllSignatures: false });
     const base64Tx = serialized.toString("base64");
