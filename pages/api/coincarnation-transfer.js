@@ -1,13 +1,10 @@
 // ✅ pages/api/coincarnation-transfer.js
-console.log("✅ /api/coincarnation-transfer çalıştı!");
-
 import { Connection, PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
 import {
   getAssociatedTokenAddress,
   createTransferInstruction,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { neon } from "@neondatabase/serverless";
 import tokenMap from "@/data/token-map.json";
 
 const RPC_ENDPOINT = "https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c";
@@ -15,8 +12,7 @@ const DESTINATION_WALLET = "D7iqkQmY3ryNFtc9qseUv6kPeVjxsSD98hKN5q3rkYTd";
 const connection = new Connection(RPC_ENDPOINT, "confirmed");
 
 export default async function handler(req, res) {
-  console.log("🌐 DATABASE_URL:", process.env.DATABASE_URL);
-  const sql = neon(process.env.DATABASE_URL);
+  console.log("✅ /api/coincarnation-transfer çalıştı!");
 
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
@@ -27,9 +23,6 @@ export default async function handler(req, res) {
       wallet_address,
       mint,
       amount,
-      usd_value = 0,
-      referral_code = null,
-      user_agent = null,
     } = req.body;
 
     if (!wallet_address || !mint || !amount) {
@@ -42,13 +35,10 @@ export default async function handler(req, res) {
     const recentBlockhash = (await connection.getLatestBlockhash()).blockhash;
     const transaction = new Transaction({ feePayer: fromPubkey, recentBlockhash });
 
-    let tokenSymbol = tokenMap[mint] || "UNKNOWN";
     let decimals = 9;
     let tokenAmount = parseFloat(amount);
-    let transaction_signature = "PENDING";
 
     if (mint === "SOL") {
-      tokenSymbol = "SOL";
       const lamports = Math.floor(tokenAmount * 1e9);
       transaction.add(
         SystemProgram.transfer({
@@ -82,46 +72,6 @@ export default async function handler(req, res) {
           TOKEN_PROGRAM_ID
         )
       );
-    }
-
-    console.log("📥 INSERT verisi:", {
-      wallet_address,
-      tokenSymbol,
-      token_contract: mint,
-      tokenAmount,
-      usd_value,
-    });
-
-    try {
-      console.log("🔥 BEFORE Neon insert");
-      await sql`
-        INSERT INTO contributions (
-          wallet_address,
-          token_symbol,
-          token_contract,
-          network,
-          token_amount,
-          usd_value,
-          transaction_signature,
-          referral_code,
-          user_agent,
-          timestamp
-        ) VALUES (
-          ${wallet_address},
-          ${tokenSymbol},
-          ${mint},
-          'solana',
-          ${tokenAmount},
-          ${usd_value},
-          ${transaction_signature},
-          ${referral_code},
-          ${user_agent},
-          NOW()
-        )
-      `;
-      console.log("✅ Neon insert başarıyla gerçekleşti!");
-    } catch (insertError) {
-      console.error("❌ Neon insert HATASI:", insertError);
     }
 
     const serialized = transaction.serialize({ requireAllSignatures: false });

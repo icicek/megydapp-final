@@ -116,20 +116,44 @@ export default function CoincarneForm({ onSelectToken }) {
       });
 
       const json = await res.json();
-      console.log("📬 API Response:", json);
+      console.log("📬 Transfer API response:", json);
 
       if (json.transaction) {
         const transaction = Transaction.from(Buffer.from(json.transaction, "base64"));
-        const txSig = await signAndSendTransaction(transaction);
-        console.log("✅ Transaction sent:", txSig);
-        alert("✅ Transaction sent to Solana network!");
+        const signature = await signAndSendTransaction(transaction);
+        console.log("✅ Transaction sent:", signature);
+  
+        // 🔁 Imzalanan işlemi veritabanına gönderiyoruz
+        const confirmRes = await fetch("/api/coincarnation-confirm", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            wallet_address: walletAddress,
+            token_symbol: metaName(selectedToken.mint),
+            token_contract: selectedToken.mint,
+            token_amount: selectedToken.amount,
+            usd_value: 0,
+            transaction_signature: signature,
+            referral_code: null,
+            user_agent: navigator.userAgent,
+          }),
+        });
+  
+        const confirmJson = await confirmRes.json();
+        console.log("🧾 Confirm API response:", confirmJson);
+  
+        if (confirmJson.success) {
+          alert("🎉 Coincarnation successful and recorded!");
+        } else {
+          alert("✅ Transaction succeeded, but DB confirm failed.");
+        }
       } else {
-        console.error("❌ Transfer API failed:", json);
-        alert("❌ Transaction preparation failed.");
+        console.error("❌ Transaction creation failed");
+        alert("❌ Failed to prepare transaction.");
       }
     } catch (err) {
       console.error("❌ Transfer error:", err);
-      alert("❌ Error occurred during transfer.");
+      alert("❌ Error during transfer.");
     } finally {
       setLoading(false);
     }
