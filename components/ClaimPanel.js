@@ -68,7 +68,7 @@ export default function ClaimPanel({ walletAddress }) {
     const fetchContributions = async () => {
       if (!walletAddress) return;
       try {
-        const res = await fetch('/api/contributions', {
+        const res = await fetch('/api/coincarnation-confirm', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ wallet: walletAddress }),
