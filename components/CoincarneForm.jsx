@@ -1,5 +1,9 @@
 'use client';
 
+useEffect(() => {
+  console.log("🧠 BU FORM AKTİF: CoincarneForm.jsx çalıştı!");
+}, []);
+
 import React, { useEffect, useState } from "react";
 import { useWallet, useConnection } from "@solana/wallet-adapter-react";
 import { Connection, Transaction } from "@solana/web3.js";
