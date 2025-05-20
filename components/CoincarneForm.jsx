@@ -109,9 +109,6 @@ export default function CoincarneForm({ onSelectToken }) {
           wallet_address: walletAddress,
           mint: selectedToken.mint,
           amount: selectedToken.amount,
-          usd_value: 0,
-          referral_code: null,
-          user_agent: navigator.userAgent,
         }),
       });
 
