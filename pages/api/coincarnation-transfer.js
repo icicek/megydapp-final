@@ -5,6 +5,7 @@ import {
   createTransferInstruction,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import { Buffer } from "buffer";
 import tokenMap from "@/data/token-map.json";
 
 const RPC_ENDPOINT = "https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c";
@@ -19,11 +20,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const {
-      wallet_address,
-      mint,
-      amount,
-    } = req.body;
+    const { wallet_address, mint, amount } = req.body;
 
     if (!wallet_address || !mint || !amount) {
       console.warn("⚠️ Missing required fields", { wallet_address, mint, amount });
@@ -54,6 +51,9 @@ export default async function handler(req, res) {
 
       try {
         const parsed = await connection.getParsedAccountInfo(mintPubkey);
+        if (!parsed?.value?.data) {
+          console.warn(`⚠️ Token mint (${mint}) için decimal bilgisi alınamadı.`);
+        }
         decimals = parsed?.value?.data?.parsed?.info?.decimals || 9;
       } catch (e) {
         console.warn(`⚠️ Couldn't fetch decimals for ${mint}, defaulting to 9`);
