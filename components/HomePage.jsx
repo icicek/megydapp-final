@@ -6,7 +6,6 @@ import CountUp from 'react-countup';
 import CoincarneForm from '@/components/CoincarneForm';
 import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
-import dynamic from 'next/dynamic';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { Dialog, DialogContent } from '@/components/ui/dialog';
 import {
@@ -20,23 +19,20 @@ import {
   createTransferInstruction,
 } from '@solana/spl-token';
 
-const Lottie = dynamic(() => import('lottie-react'), { ssr: false });
-
 export default function Home() {
   const { publicKey, sendTransaction } = useWallet();
   const { connection } = useConnection();
   const customConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
   const { setVisible } = useWalletModal();
   const walletAddress = publicKey?.toBase58();
+
   const [stats, setStats] = useState({ participantCount: 0, totalUsdValue: 0, latest: null });
   const [endDate, setEndDate] = useState(null);
   const [timeLeft, setTimeLeft] = useState({});
-  const [swapAnimationData, setSwapAnimationData] = useState(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalData, setModalData] = useState({ token: '', amount: 0 });
   const [selectedAmount, setSelectedAmount] = useState('');
   const [confirmed, setConfirmed] = useState(false);
-  const [tokens, setTokens] = useState([]);
   const [tokenMetadata, setTokenMetadata] = useState({});
   const [hasLastCoincarnation, setHasLastCoincarnation] = useState(false);
 
@@ -72,11 +68,6 @@ export default function Home() {
           });
       }
     }
-
-//    fetch('/animations/looping-swap.json')
-//        .then(res => res.json())
-//        .then(data => setSwapAnimationData(data))
-//        .catch(err => console.error("Lottie animation fetch error:", err));
   }, [walletAddress]);
 
   useEffect(() => {
@@ -153,12 +144,6 @@ export default function Home() {
     fetchTokenList();
   }, []);
 
-  const metaName = (mint) => {
-    if (mint === 'SOL') return 'SOL';
-    const meta = tokenMetadata[mint];
-    return meta?.symbol || meta?.name || mint?.slice(0, 4) + '...' + mint?.slice(-4);
-  };
-
   const handleTokenSelect = (token, amount) => {
     setModalData({ token, amount });
     setSelectedAmount('');
@@ -168,36 +153,15 @@ export default function Home() {
 
   const handleCoincarnation = async () => {
     try {
-      console.log("🧪 publicKey:", publicKey?.toBase58());
-      console.log("🧪 modalData.token:", modalData.token);
-      console.log("🧪 selectedAmount:", selectedAmount);
-
-      if (!publicKey) {
-        alert("Please connect your wallet first.");
-        return;
-      }
-      if (!modalData.token) {
-        alert("Please select a token to Coincarnate.");
-        return;
-      }
-      if (!selectedAmount || isNaN(parseFloat(selectedAmount)) || parseFloat(selectedAmount) <= 0) {
-        alert("Please enter a valid amount to Coincarnate.");
-        return;
-      }
-
+      if (!publicKey) return alert("Please connect your wallet first.");
+      if (!modalData.token) return alert("Please select a token.");
       const amount = parseFloat(selectedAmount);
-      if (isNaN(amount) || amount <= 0) {
-        alert("Invalid amount.");
-        return;
-      }
-      if (modalData.token === 'SOL' && amount < 0.0021) {
-        alert("Due to Solana rent rules, minimum SOL transfer must be 0.0021 SOL.");
-        return;
-      }
+      if (!amount || isNaN(amount) || amount <= 0) return alert("Enter a valid amount.");
 
       const transaction = new Transaction();
 
       if (modalData.token === 'SOL') {
+        if (amount < 0.0021) return alert("Minimum 0.0021 SOL due to rent-exemption.");
         const lamports = Math.floor(amount * 1e9);
         transaction.add(
           SystemProgram.transfer({
@@ -213,23 +177,15 @@ export default function Home() {
         if (!mintEntry) throw new Error("Token mint not found.");
         const [mintAddress, metadata] = mintEntry;
 
-        const sourceTokenAccount = await getAssociatedTokenAddress(
-          new PublicKey(mintAddress),
-          publicKey
-        );
-        const destinationTokenAccount = await getAssociatedTokenAddress(
-          new PublicKey(mintAddress),
-          new PublicKey(COINCARNATION_DESTINATION)
-        );
-
-        const decimals = metadata.decimals || 6;
+        const source = await getAssociatedTokenAddress(new PublicKey(mintAddress), publicKey);
+        const destination = await getAssociatedTokenAddress(new PublicKey(mintAddress), new PublicKey(COINCARNATION_DESTINATION));
 
         transaction.add(
           createTransferInstruction(
-            sourceTokenAccount,
-            destinationTokenAccount,
+            source,
+            destination,
             publicKey,
-            Math.floor(amount * 10 ** decimals)
+            Math.floor(amount * 10 ** (metadata.decimals || 6))
           )
         );
       }
@@ -241,17 +197,9 @@ export default function Home() {
       const signature = await sendTransaction(transaction, customConnection);
       await customConnection.confirmTransaction({ signature, blockhash, lastValidBlockHeight }, 'finalized');
 
-      const txResult = await customConnection.getTransaction(signature, { commitment: 'confirmed' });
-      console.error("🔴 On-chain transaction error:", txResult?.meta?.err);
-console.log("🔗 View on Solana Explorer:", `https://solscan.io/tx/${signature}`);
-      if (txResult?.meta?.err) {
-        throw new Error("Transaction failed on-chain.");
-      }
-
-      console.log("✅ Coincarnation successful:", signature);
       setConfirmed(true);
     } catch (err) {
-      console.error("❌ Coincarnation failed:", err);
+      console.error("Coincarnation failed:", err);
       alert("Transaction failed: " + err.message);
     }
   };
@@ -263,32 +211,21 @@ console.log("🔗 View on Solana Explorer:", `https://solscan.io/tx/${signature}
 
       <div className="text-lg font-medium mt-4 space-y-2">
         <p>🎉 <CountUp key={stats.participantCount} end={stats.participantCount} duration={1.5} /> Coincarnators and counting...</p>
-        <p>💸 $<CountUp key={stats.totalUsdValue} end={stats.totalUsdValue} duration={1.5} decimals={2} /> worth of deadcoins revived.</p>
+        <p>💸 $<CountUp key={stats.totalUsdValue} end={stats.totalUsdValue} duration={1.5} decimals={2} /> revived.</p>
       </div>
 
-      <div className="mt-10 w-full max-w-xl mx-auto px-4 animate-fade-in">
-        <div
-          onClick={() => setVisible(true)}
-          className="bg-gradient-to-br from-gray-900 to-gray-800 border border-gray-700 rounded-2xl p-6 shadow-xl cursor-pointer"
-        >
-          <div className="text-sm text-gray-400 mb-1 text-left flex items-center space-x-2">
-            <span className="animate-pulse">💀</span>
-            <span>You give</span>
-          </div>
-          <div className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-red-500 rounded-lg flex items-center justify-between">
-            <span>Walking Deadcoins</span>
-            <span className="text-sm text-gray-400 ml-2">(Memecoins, shitcoins...)</span>
+      <div className="mt-10 w-full max-w-xl mx-auto px-4">
+        <div onClick={() => setVisible(true)} className="bg-gray-900 border border-gray-700 rounded-2xl p-6 shadow-xl cursor-pointer">
+          <div className="text-sm text-gray-400 mb-1">You give</div>
+          <div className="w-full py-3 px-4 text-xl font-bold bg-gray-800 text-white border border-red-500 rounded-lg">
+            Walking Deadcoins <span className="text-sm text-gray-400">(Memecoins, shitcoins...)</span>
           </div>
 
-          <div className="my-4 text-center text-white font-bold text-lg">Coincarnate</div>
+          <div className="my-4 font-bold text-lg">Coincarnate</div>
 
-          <div className="text-sm text-gray-400 mb-1 text-left flex items-center space-x-2">
-            <span className="animate-bounce">🚀</span>
-            <span>You receive</span>
-          </div>
-          <div className="w-full py-3 px-4 text-left text-xl font-bold bg-gray-800 text-white border border-green-500 rounded-lg flex items-center justify-between">
-            <span>MEGY</span>
-            <span className="text-sm text-gray-400 ml-2">(Future of Money)</span>
+          <div className="text-sm text-gray-400 mb-1">You receive</div>
+          <div className="w-full py-3 px-4 text-xl font-bold bg-gray-800 text-white border border-green-500 rounded-lg">
+            MEGY <span className="text-sm text-gray-400">(Future of Money)</span>
           </div>
         </div>
 
@@ -301,44 +238,15 @@ console.log("🔗 View on Solana Explorer:", `https://solscan.io/tx/${signature}
         <CoincarneForm onSelectToken={handleTokenSelect} />
       </div>
 
-      <div className="mt-8 flex justify-center">
-        <Link href={walletAddress ? '/claim' : '#'}>
-          <button
-            disabled={!walletAddress}
-            className={`px-6 py-3 text-lg font-bold rounded-xl transition-all duration-300 ${walletAddress ? 'bg-green-500 hover:bg-green-600 text-black' : 'bg-gray-700 text-gray-400 cursor-not-allowed'}`}
-          >
-            🎯 Go to Profile
-          </button>
-        </Link>
-      </div>
-
-      {stats.latest && (
-        <div className="mt-6 text-sm text-gray-300">
-          🧑‍🚀 Latest: <span className="font-mono">{stats.latest.wallet}</span> revived <span className="font-bold">{stats.latest.token}</span>
-        </div>
-      )}
-
-      {!timeLeft.expired && endDate && (
-        <div className="mt-4 text-sm text-yellow-400">
-          ⏳ {timeLeft.days} days {timeLeft.hours}:{timeLeft.minutes?.toString().padStart(2, '0')}:{timeLeft.seconds?.toString().padStart(2, '0')} remaining...
-        </div>
-      )}
-
       <Dialog open={modalOpen} onOpenChange={setModalOpen}>
-        <DialogContent className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gray-900 border border-white rounded-2xl p-6 w-full max-w-md mx-auto text-center">
+        <DialogContent className="bg-gray-900 border border-white rounded-2xl p-6 w-full max-w-md text-center">
           {!confirmed ? (
             <>
               <h2 className="text-xl font-bold mb-4">Coincarnate {modalData.token}</h2>
-              <p className="text-sm text-gray-400 mb-2">You have {modalData.amount.toFixed(4)} {modalData.token} in your wallet</p>
+              <p className="text-sm text-gray-400 mb-2">Available: {modalData.amount?.toFixed(4)} {modalData.token}</p>
               <div className="mt-4 space-x-2">
                 {[25, 50, 75, 100].map(pct => (
-                  <button
-                    key={pct}
-                    onClick={() => setSelectedAmount((modalData.amount * (pct / 100)).toFixed(4))}
-                    className="bg-gray-700 px-3 py-1 rounded text-white"
-                  >
-                    %{pct}
-                  </button>
+                  <button key={pct} onClick={() => setSelectedAmount((modalData.amount * (pct / 100)).toFixed(4))} className="bg-gray-700 px-3 py-1 rounded text-white">%{pct}</button>
                 ))}
               </div>
               <input
@@ -348,68 +256,21 @@ console.log("🔗 View on Solana Explorer:", `https://solscan.io/tx/${signature}
                 placeholder="Enter amount"
                 className="mt-4 w-full p-2 rounded bg-gray-800 border border-gray-600 text-white"
               />
-              <button
-                onClick={handleCoincarnation}
-                className="mt-4 w-full bg-purple-600 hover:bg-purple-700 py-2 rounded-xl font-bold"
-              >
+              <button onClick={handleCoincarnation} className="mt-4 w-full bg-purple-600 hover:bg-purple-700 py-2 rounded-xl font-bold">
                 Confirm Coincarnation
               </button>
             </>
           ) : (
             <>
               <h2 className="text-xl font-bold mb-4">🎉 Coincarnation Complete</h2>
-<p className="text-sm text-yellow-400 mb-4">✅ Transaction confirmed. It may take a few minutes to appear in your wallet.</p>
-              <p className="text-sm text-green-400 mb-2">🎊 You’ve successfully revived your deadcoin! Want to make it count even more?</p>
-<p className="text-sm text-white mb-4">🐦 Tweet your Coincarnation and inspire others! Participants who share their result may unlock exclusive rewards and NFT access.</p>
-<div className="flex flex-col gap-4">
-                <button
-                  onClick={() => setModalOpen(false)}
-                  className="bg-purple-600 hover:bg-purple-700 w-full py-2 rounded-xl font-bold"
-                >
-                  🔁 Recoincarnate
-                </button>
-                <Link href="/claim">
-                  <button className="bg-blue-600 hover:bg-blue-700 w-full py-2 rounded-xl font-bold">
-                    👤 Go to Profile
-                  </button>
-                </Link>
-                <a
-                  href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                    `🚀 Just Coincarnated my $${modalData.token} for $MEGY! #Coincarnation`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-cyan-500 hover:bg-cyan-600 text-black font-bold py-2 px-4 rounded text-center"
-                >
-                  🐦 Share on X
-                </a>
-              </div>
+              <p className="text-sm text-yellow-400 mb-2">✅ Transaction confirmed.</p>
+              <Link href="/claim">
+                <button className="bg-blue-600 hover:bg-blue-700 w-full py-2 rounded-xl font-bold mt-4">👤 Go to Profile</button>
+              </Link>
             </>
           )}
         </DialogContent>
       </Dialog>
-    {hasLastCoincarnation && (
-        <button
-          onClick={() => {
-            const stored = localStorage.getItem("lastCoincarnation");
-            if (stored) {
-              try {
-                const parsed = JSON.parse(stored);
-                if (parsed.token && parsed.amount) {
-                  setModalData({ token: parsed.token, amount: parseFloat(parsed.amount) });
-                  setConfirmed(true);
-                  localStorage.removeItem("lastCoincarnation");
-                }
-              } catch (err) {
-                console.error("Failed to parse lastCoincarnation", err);
-              }
-            }
-          }}
-          className="mt-6 bg-purple-600 hover:bg-purple-700 text-white font-bold px-6 py-3 rounded-xl"
-        >
-          🔁 Show Last Coincarnation
-        </button>
-      )}
     </div>
   );
 }
