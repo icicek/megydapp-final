@@ -7,9 +7,13 @@ const pool = new Pool({
 });
 
 export default async function handler(req, res) {
+  console.log("✅ [coincarnation-confirm] çalıştı");
+
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
+
+  console.log("🔍 ENV Check - DATABASE_URL:", process.env.DATABASE_URL);
 
   const {
     wallet_address,
@@ -23,11 +27,19 @@ export default async function handler(req, res) {
   } = req.body;
 
   if (!wallet_address || !token_symbol || !token_contract || !token_amount || !transaction_signature) {
+    console.warn("⚠️ Eksik alan(lar):", {
+      wallet_address,
+      token_symbol,
+      token_contract,
+      token_amount,
+      transaction_signature,
+    });
     return res.status(400).json({ error: "Missing required fields." });
   }
 
   try {
     const client = await pool.connect();
+    console.log("✅ DB bağlantısı başarılı");
 
     await client.query(
       `INSERT INTO contributions (
@@ -48,11 +60,12 @@ export default async function handler(req, res) {
       ]
     );
 
+    console.log("✅ Veri başarıyla yazıldı");
     client.release();
 
     return res.status(200).json({ success: true });
   } catch (err) {
-    console.error("❌ DB insert error:", err);
+    console.error("❌ DB yazım hatası:", err.message);
     return res.status(500).json({ error: "Internal Server Error" });
   }
 }
