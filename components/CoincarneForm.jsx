@@ -115,41 +115,56 @@ export default function CoincarneForm({ onSelectToken }) {
       const json = await res.json();
       console.log("📬 Transfer API response:", json);
 
-      if (json.transaction) {
-        const transaction = Transaction.from(Buffer.from(json.transaction, "base64"));
-        const signature = await signAndSendTransaction(transaction);
-        console.log("✅ Transaction sent:", signature);
-
-        const confirmPayload = {
-          wallet_address: walletAddress,
-          token_symbol: metaName(selectedToken.mint),
-          token_contract: selectedToken.mint,
-          token_amount: selectedToken.amount,
-          usd_value: 0,
-          transaction_signature: signature,
-          referral_code: null,
-          user_agent: navigator.userAgent,
-        };
-
-        console.log("📤 Sending confirm payload:", confirmPayload);
-
-        const confirmRes = await fetch("/api/coincarnation-confirm", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(confirmPayload),
-        });
-
-        const confirmJson = await confirmRes.json();
-        console.log("🧾 Confirm API response:", confirmJson);
-
-        if (confirmJson.success) {
-          alert("🎉 Coincarnation successful and recorded!");
-        } else {
-          alert("✅ Transaction succeeded, but DB confirm failed.");
-        }
-      } else {
-        console.error("❌ Transaction creation failed");
+      if (!json.transaction) {
+        console.error("❌ No transaction returned from transfer API");
         alert("❌ Failed to prepare transaction.");
+        return;
+      }
+
+      const transaction = Transaction.from(Buffer.from(json.transaction, "base64"));
+      const signature = await signAndSendTransaction(transaction);
+
+      if (!signature) {
+        console.error("❌ Transaction sent but no signature returned!");
+        alert("✅ Blockchain transfer done but signature not returned.");
+        return;
+      }
+
+      console.log("✅ Transaction sent:", signature);
+
+      const confirmPayload = {
+        wallet_address: walletAddress,
+        token_symbol: metaName(selectedToken.mint),
+        token_contract: selectedToken.mint,
+        token_amount: selectedToken.amount,
+        usd_value: 0,
+        transaction_signature: signature,
+        referral_code: null,
+        user_agent: navigator.userAgent,
+      };
+
+      console.log("📤 Sending confirm payload to /api/coincarnation-confirm:", confirmPayload);
+
+      const confirmRes = await fetch("/api/coincarnation-confirm", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(confirmPayload),
+      });
+
+      if (!confirmRes.ok) {
+        const errorText = await confirmRes.text();
+        console.error("❌ Confirm API failed:", confirmRes.status, errorText);
+        alert("✅ Transaction confirmed but failed to record in DB.");
+        return;
+      }
+
+      const confirmJson = await confirmRes.json();
+      console.log("🧾 Confirm API response:", confirmJson);
+
+      if (confirmJson.success) {
+        alert("🎉 Coincarnation successful and recorded!");
+      } else {
+        alert("✅ Transaction succeeded, but DB confirm failed.");
       }
     } catch (err) {
       console.error("❌ Transfer error:", err);
