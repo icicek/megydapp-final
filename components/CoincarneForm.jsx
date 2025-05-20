@@ -122,8 +122,7 @@ export default function CoincarneForm({ onSelectToken }) {
         const transaction = Transaction.from(Buffer.from(json.transaction, "base64"));
         const signature = await signAndSendTransaction(transaction);
         console.log("✅ Transaction sent:", signature);
-  
-        // 🔁 Imzalanan işlemi veritabanına gönderiyoruz
+
         const confirmRes = await fetch("/api/coincarnation-confirm", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -138,10 +137,10 @@ export default function CoincarneForm({ onSelectToken }) {
             user_agent: navigator.userAgent,
           }),
         });
-  
+
         const confirmJson = await confirmRes.json();
         console.log("🧾 Confirm API response:", confirmJson);
-  
+
         if (confirmJson.success) {
           alert("🎉 Coincarnation successful and recorded!");
         } else {
