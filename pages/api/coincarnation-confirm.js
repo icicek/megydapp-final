@@ -1,9 +1,10 @@
+// ✅ pages/api/coincarnation-confirm.js
+
 import { neon } from "@neondatabase/serverless";
 
 export default async function handler(req, res) {
   console.log("✅ [coincarnation-confirm] API endpoint çalıştı");
 
-  // 👉 Sadece POST metoduna izin ver
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -20,7 +21,6 @@ export default async function handler(req, res) {
       user_agent = null,
     } = req.body;
 
-    // ✅ Zorunlu alan kontrolü
     if (
       !wallet_address ||
       !token_symbol ||
@@ -38,7 +38,6 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: "Missing required fields." });
     }
 
-    // ✅ Environment kontrolü
     const dbUrl = process.env.DATABASE_URL;
     if (!dbUrl) {
       console.error("❌ DATABASE_URL environment variable is not set");
@@ -47,7 +46,6 @@ export default async function handler(req, res) {
 
     const sql = neon(dbUrl);
 
-    // 🧾 INSERT verisi logu
     console.log("📥 DB INSERT verisi:", {
       wallet_address,
       token_symbol,
@@ -60,7 +58,6 @@ export default async function handler(req, res) {
       user_agent,
     });
 
-    // 💾 Neon’a yazma
     await sql`
       INSERT INTO contributions (
         wallet_address,

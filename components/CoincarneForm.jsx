@@ -123,19 +123,23 @@ export default function CoincarneForm({ onSelectToken }) {
         const signature = await signAndSendTransaction(transaction);
         console.log("✅ Transaction sent:", signature);
 
+        const confirmPayload = {
+          wallet_address: walletAddress,
+          token_symbol: metaName(selectedToken.mint),
+          token_contract: selectedToken.mint,
+          token_amount: selectedToken.amount,
+          usd_value: 0,
+          transaction_signature: signature,
+          referral_code: null,
+          user_agent: navigator.userAgent,
+        };
+
+        console.log("📤 Sending confirm payload:", confirmPayload);
+
         const confirmRes = await fetch("/api/coincarnation-confirm", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            wallet_address: walletAddress,
-            token_symbol: metaName(selectedToken.mint),
-            token_contract: selectedToken.mint,
-            token_amount: selectedToken.amount,
-            usd_value: 0,
-            transaction_signature: signature,
-            referral_code: null,
-            user_agent: navigator.userAgent,
-          }),
+          body: JSON.stringify(confirmPayload),
         });
 
         const confirmJson = await confirmRes.json();
