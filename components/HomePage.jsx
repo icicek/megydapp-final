@@ -73,10 +73,10 @@ export default function Home() {
       }
     }
 
-    fetch('/animations/looping-swap.json')
-        .then(res => res.json())
-        .then(data => setSwapAnimationData(data))
-        .catch(err => console.error("Lottie animation fetch error:", err));
+//    fetch('/animations/looping-swap.json')
+//        .then(res => res.json())
+//        .then(data => setSwapAnimationData(data))
+//        .catch(err => console.error("Lottie animation fetch error:", err));
   }, [walletAddress]);
 
   useEffect(() => {
