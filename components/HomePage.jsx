@@ -24,7 +24,7 @@ export default function Home() {
   const { connection } = useConnection();
   const customConnection = new Connection("https://mainnet.helius-rpc.com/?api-key=2474b174-fad8-49db-92cb-8a0add22e70c");
   const { setVisible } = useWalletModal();
-  const walletAddress = publicKey?.toBase58();
+  const walletAddress = publicKey ? publicKey.toBase58() : null;
 
   const [stats, setStats] = useState({ participantCount: 0, totalUsdValue: 0, latest: null });
   const [endDate, setEndDate] = useState(null);
